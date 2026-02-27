@@ -80,13 +80,26 @@
 
 ### D-1 Bundle最適化
 - [ ] `vite` の `manualChunks` + `dynamic import` 検証
+  - [x] 現行1Scene構成での build 計測を更新し、分割余地が小さいことを確認
 - [ ] Phaser依存範囲の最小化（import見直し）
-- [ ] 主要chunkサイズの計測をREADMEに記録
+- [x] 主要chunkサイズの計測をREADMEに記録
 
 ### D-2 コード品質
 - [ ] Scene責務の肥大化検知（200行超の関数分割）
-- [ ] System間インターフェースを型で固定
+  - [x] `TrainBackgroundRenderer` を新設し `MainScene` から背景描画ロジックを分離
+  - [x] 攻撃入力パラメータを `LIGHT_ATTACK` / `HEAVY_ATTACK` 定数へ抽出し重複を削減
+  - [x] 敵AIの速度算出を `getEnemyChaseVelocity` に抽出して分岐重複を整理
+  - [x] 被弾ノックバック処理を `applyPlayerKnockback` に抽出して `onPlayerHit` を簡素化
+  - [x] `update` の再起動判定/システムtick/HiScore永続化を `shouldRestartRun` / `tickSystems` / `persistHiScore` へ分割
+  - [x] 敵追従AIを `EnemyAiSystem` に分離し `MainScene` の責務を縮小
+  - [x] `MainScene` の被弾まわりマジックナンバー（無敵/ノックバック/色戻し）を定数化（2026-02-27）
+  - [x] `setupInput` のキー登録重複を `bindKey` ヘルパーで整理（2026-02-27）
+  - [x] `Enemy` タイプ別ステータスを `ENEMY_SPECS` に集約し三項演算の重複を解消（2026-02-27）
+  - [x] `MainScene` のプレイヤー移動/ジャンプ/物理パラメータを定数化してマジックナンバーを削減（2026-02-27）
+  - [x] 敵スポーン間隔/物理パラメータのマジックナンバーを定数化し `spawnInitialEnemies` を while で明確化（2026-02-27）
+- [x] System間インターフェースを型で固定（`contracts.ts` で Score/Stress の境界を明示）
 - [ ] 「未使用状態/定数/関数」除去タスクを毎日生成
+  - [x] `UISystem` の未使用プロパティ `infoText` を除去（2026-02-27）
 
 ### D-3 運用ルール
 - [ ] 10分報告ごとに「新規リファクタ候補」を1件抽出

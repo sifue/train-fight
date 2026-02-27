@@ -22,6 +22,18 @@ npm run build
 npm run preview
 ```
 
+### ビルド計測メモ（2026-02-27）
+
+`npm run build` 実行結果（gzip込み）:
+- `dist/index.html` 0.71 kB（0.55 kB）
+- `dist/assets/index-D_TSuhbA.css` 0.52 kB（0.37 kB）
+- `dist/assets/index-D0f3tAfk.js` 13.87 kB（4.91 kB）
+- `dist/assets/phaser-0RJB29YE.js` 1,478.57 kB（339.68 kB）
+
+補足:
+- `manualChunks` で Phaser は分離済み
+- `dynamic import` 検証メモ: 現状は `MainScene` 1本構成のため分割余地が小さい。次段で「タイトル/ローディングScene」を分離して初回ロード短縮を再検証する
+
 ## 操作
 
 - `← →` 移動
