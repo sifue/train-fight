@@ -69,6 +69,11 @@ GitHubの"machine user"（ボット用ユーザー）を作る場合:
 - `style.css` ... UI/表示
 - `game.js` ... ゲームロジック（Phaser）
 
+## 追加要素
+
+- スコアシステム（HIT/撃破/クリアボーナス）
+- ハイスコア保存（localStorage）
+
 ## Phase2 で追加済み
 
 - 敵タイプ追加（通常 / heavy / rush）

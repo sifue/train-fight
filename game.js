@@ -20,15 +20,16 @@ new Phaser.Game(config);
 
 let player, enemies, cursors, keys;
 let attackHitbox, brakeLever;
-let hp = 140, stress = 8, gameOver = false;
+let hp = 140, stress = 8, score = 0, hiScore = 0, gameOver = false;
 let facing = 1;
 let combo = 0, comboTimer = 0, attackLock = 0;
 let nearBrake = false;
-let hpText, stressText, infoText, comboText;
+let hpText, stressText, infoText, comboText, scoreText, hiScoreText;
 
 function create() {
   this.physics.world.setBounds(0, 0, WORLD_WIDTH, HEIGHT);
   this.sfx = createSfx(this);
+  hiScore = Number(localStorage.getItem('trainFightHiScore') || 0);
 
   drawTrain(this);
 
@@ -68,7 +69,9 @@ function create() {
   hpText = this.add.text(16, 14, '', uiStyle()).setScrollFactor(0);
   stressText = this.add.text(16, 40, '', uiStyle()).setScrollFactor(0);
   comboText = this.add.text(16, 66, '', uiStyle('#ffd166')).setScrollFactor(0);
-  infoText = this.add.text(16, 92, '', uiStyle('#d7e3ff')).setScrollFactor(0);
+  scoreText = this.add.text(16, 92, '', uiStyle('#7ce0ff')).setScrollFactor(0);
+  hiScoreText = this.add.text(16, 118, '', uiStyle('#9dff9d')).setScrollFactor(0);
+  infoText = this.add.text(16, 146, '', uiStyle('#d7e3ff')).setScrollFactor(0);
 
   this.time.addEvent({ delay: 2300, loop: true, callback: () => {
     if (gameOver) return;
@@ -125,9 +128,16 @@ function update(_, dt) {
   if (comboTimer > 0) comboTimer -= dt;
   else combo = 0;
 
+  if (score > hiScore) {
+    hiScore = score;
+    localStorage.setItem('trainFightHiScore', String(hiScore));
+  }
+
   hpText.setText(`HP: ${Math.max(0, hp)}`);
   stressText.setText(`暴走ゲージ: ${stress}%`);
   comboText.setText(combo > 1 ? `COMBO x${combo}` : '');
+  scoreText.setText(`SCORE: ${score}`);
+  hiScoreText.setText(`HI-SCORE: ${hiScore}`);
   infoText.setText(nearBrake ? (stress < 80 ? 'E で非常ブレーキ！' : '車内が混乱していて危険') : '右へ進め。先頭車両で非常ブレーキを引け');
 
   if (now < player.invulnUntil) {
@@ -171,6 +181,8 @@ function onHitEnemy(scene, enemy) {
 
   combo += 1;
   comboTimer = 1150;
+  const hitBase = enemy.type === 'heavy' ? 22 : enemy.type === 'rush' ? 14 : 10;
+  score += hitBase + Math.min(50, combo * 2);
   stress = Math.max(0, stress - (enemy.type === 'heavy' ? 3 : 2));
 
   if (enemy.hp <= 0) {
@@ -188,6 +200,8 @@ function onHitEnemy(scene, enemy) {
       onComplete: () => enemy.destroy()
     });
 
+    const koBonus = enemy.type === 'heavy' ? 220 : enemy.type === 'rush' ? 150 : 110;
+    score += koBonus + Math.min(120, combo * 4);
     stress = Math.max(0, stress - 5);
     scene.cameras.main.shake(90, 0.0022);
     if (Phaser.Math.Between(0, 2) === 0) scene.sfx.metal();
@@ -344,20 +358,35 @@ function createSfx(scene) {
 
 function win(scene) {
   gameOver = true;
+  score += Math.max(0, 1200 - stress * 8) + Math.max(0, hp * 4);
+  if (score > hiScore) {
+    hiScore = score;
+    localStorage.setItem('trainFightHiScore', String(hiScore));
+  }
   scene.physics.pause();
   const x = scene.cameras.main.scrollX + WIDTH / 2;
-  scene.add.rectangle(x, HEIGHT / 2, 680, 210, 0x000000, 0.72);
-  scene.add.text(x - 275, HEIGHT / 2 - 26, 'MISSION COMPLETE\n暴走列車を停止した！', {
+  scene.add.rectangle(x, HEIGHT / 2, 760, 250, 0x000000, 0.72);
+  scene.add.text(x - 300, HEIGHT / 2 - 58, 'MISSION COMPLETE\n暴走列車を停止した！', {
     font: '42px monospace', fill: '#8bff9b'
+  });
+  scene.add.text(x - 300, HEIGHT / 2 + 42, `SCORE: ${score}   HI-SCORE: ${hiScore}`, {
+    font: '28px monospace', fill: '#d6f4ff'
   });
 }
 
 function lose(scene, msg) {
   gameOver = true;
+  if (score > hiScore) {
+    hiScore = score;
+    localStorage.setItem('trainFightHiScore', String(hiScore));
+  }
   scene.physics.pause();
   const x = scene.cameras.main.scrollX + WIDTH / 2;
-  scene.add.rectangle(x, HEIGHT / 2, 680, 210, 0x000000, 0.72);
-  scene.add.text(x - 250, HEIGHT / 2 - 26, `GAME OVER\n${msg}`, {
+  scene.add.rectangle(x, HEIGHT / 2, 760, 250, 0x000000, 0.72);
+  scene.add.text(x - 270, HEIGHT / 2 - 58, `GAME OVER\n${msg}`, {
     font: '40px monospace', fill: '#ff8f8f'
+  });
+  scene.add.text(x - 300, HEIGHT / 2 + 42, `SCORE: ${score}   HI-SCORE: ${hiScore}`, {
+    font: '28px monospace', fill: '#ffdcdc'
   });
 }
