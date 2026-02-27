@@ -20,7 +20,7 @@ new Phaser.Game(config);
 
 let player, enemies, cursors, keys;
 let attackHitbox, brakeLever;
-let hp = 100, stress = 15, gameOver = false;
+let hp = 140, stress = 8, gameOver = false;
 let facing = 1;
 let combo = 0, comboTimer = 0, attackLock = 0;
 let nearBrake = false;
@@ -44,7 +44,7 @@ function create() {
   player.invulnUntil = 0;
 
   enemies = this.physics.add.group();
-  for (let x = 440; x < WORLD_WIDTH - 250; x += Phaser.Math.Between(120, 200)) spawnEnemy(this, x);
+  for (let x = 460; x < WORLD_WIDTH - 250; x += Phaser.Math.Between(170, 260)) spawnEnemy(this, x);
 
   brakeLever = this.add.rectangle(WORLD_WIDTH - 140, GROUND_Y - 8, 20, 90, 0xffd43b).setOrigin(0.5, 1);
   this.physics.add.existing(brakeLever, true);
@@ -70,14 +70,14 @@ function create() {
   comboText = this.add.text(16, 66, '', uiStyle('#ffd166')).setScrollFactor(0);
   infoText = this.add.text(16, 92, '', uiStyle('#d7e3ff')).setScrollFactor(0);
 
-  this.time.addEvent({ delay: 1800, loop: true, callback: () => {
+  this.time.addEvent({ delay: 2300, loop: true, callback: () => {
     if (gameOver) return;
-    if (enemies.countActive(true) < 32) spawnEnemy(this, this.cameras.main.scrollX + WIDTH + Phaser.Math.Between(120, 320));
+    if (enemies.countActive(true) < 24) spawnEnemy(this, this.cameras.main.scrollX + WIDTH + Phaser.Math.Between(160, 340));
     stress = Math.min(100, stress + 1);
     if (stress >= 100) lose(this, '暴走が限界に達した…');
   }});
 
-  this.time.addEvent({ delay: 1000, loop: true, callback: () => !gameOver && this.sfx.alarm() });
+  this.time.addEvent({ delay: 1300, loop: true, callback: () => !gameOver && this.sfx.alarm() });
 }
 
 function update(_, dt) {
@@ -111,14 +111,14 @@ function update(_, dt) {
     const dx = player.x - e.x;
     const dir = Math.sign(dx);
     if (Math.abs(dx) < 440 && now > e.stunnedUntil) {
-      const aggro = e.type === 'heavy' ? 58 : e.type === 'rush' ? 130 : 90;
+      const aggro = e.type === 'heavy' ? 46 : e.type === 'rush' ? 112 : 74;
       e.body.setVelocityX(dir * aggro);
     }
   }
 
   nearBrake = Phaser.Math.Distance.Between(player.x, player.y, brakeLever.x, brakeLever.y) < 78;
   if (nearBrake && Phaser.Input.Keyboard.JustDown(keys.E)) {
-    if (stress < 65) win(this);
+    if (stress < 80) win(this);
     else infoText.setText('混乱が酷い！敵を減らしてからブレーキを引け');
   }
 
@@ -128,7 +128,7 @@ function update(_, dt) {
   hpText.setText(`HP: ${Math.max(0, hp)}`);
   stressText.setText(`暴走ゲージ: ${stress}%`);
   comboText.setText(combo > 1 ? `COMBO x${combo}` : '');
-  infoText.setText(nearBrake ? (stress < 65 ? 'E で非常ブレーキ！' : '車内が混乱していて危険') : '右へ進め。先頭車両で非常ブレーキを引け');
+  infoText.setText(nearBrake ? (stress < 80 ? 'E で非常ブレーキ！' : '車内が混乱していて危険') : '右へ進め。先頭車両で非常ブレーキを引け');
 
   if (now < player.invulnUntil) {
     player.setFillStyle((Math.floor(now / 60) % 2) ? 0xffffff : 0x48d7ff);
@@ -160,7 +160,7 @@ function attack(scene, cfg) {
 }
 
 function onHitEnemy(scene, enemy) {
-  if (!attackHitbox.active || scene.time.now < enemy.stunnedUntil) return;
+  if (!attackHitbox.active || enemy.hp <= 0 || scene.time.now < enemy.stunnedUntil) return;
 
   enemy.hp -= attackHitbox.power;
   enemy.stunnedUntil = scene.time.now + 280;
@@ -174,16 +174,30 @@ function onHitEnemy(scene, enemy) {
   stress = Math.max(0, stress - (enemy.type === 'heavy' ? 3 : 2));
 
   if (enemy.hp <= 0) {
-    enemy.destroy();
-    stress = Math.max(0, stress - 4);
-    if (Phaser.Math.Between(0, 3) === 0) scene.sfx.metal();
+    enemy.hp = 0;
+    enemy.stunnedUntil = scene.time.now + 999999;
+    enemy.body.checkCollision.none = true;
+    enemy.body.setVelocityX(facing * (attackHitbox.push + (enemy.type === 'heavy' ? 190 : 280)));
+    enemy.body.setVelocityY(enemy.type === 'heavy' ? -300 : -380);
+    enemy.setFillStyle(0xfff1b5);
+    scene.tweens.add({
+      targets: enemy,
+      angle: facing * Phaser.Math.Between(35, 75),
+      alpha: 0,
+      duration: 460,
+      onComplete: () => enemy.destroy()
+    });
+
+    stress = Math.max(0, stress - 5);
+    scene.cameras.main.shake(90, 0.0022);
+    if (Phaser.Math.Between(0, 2) === 0) scene.sfx.metal();
   }
 }
 
 function onHitPlayer(scene, enemy) {
   const now = scene.time.now;
   if (now < player.invulnUntil || now < enemy.stunnedUntil) return;
-  const dmg = enemy.type === 'heavy' ? 12 : 8;
+  const dmg = enemy.type === 'heavy' ? 10 : 6;
 
   hp -= dmg;
   combo = 0;
@@ -220,36 +234,67 @@ function spawnEnemy(scene, x) {
 
 function drawTrain(scene) {
   const g = scene.add.graphics();
-  g.fillStyle(0x151f31); g.fillRect(0, 0, WORLD_WIDTH, HEIGHT);
+  g.fillStyle(0x111a2b); g.fillRect(0, 0, WORLD_WIDTH, HEIGHT);
 
-  // car partitions
-  for (let x = 0; x < WORLD_WIDTH; x += 440) {
-    g.fillStyle(0x465874); g.fillRect(x + 5, 0, 8, HEIGHT);
-    g.fillStyle(0x465874); g.fillRect(x + 430, 0, 8, HEIGHT);
-
-    g.fillStyle(0x5a6986);
-    g.fillRect(x + 70, 70, 130, 120);
-    g.fillRect(x + 240, 70, 130, 120);
-    g.fillStyle(0x2f3e55);
-    g.fillRect(x + 80, 80, 110, 100);
-    g.fillRect(x + 250, 80, 110, 100);
-
-    g.fillStyle(0x1b2940);
-    g.fillRect(x + 10, 220, 420, 12);
+  // ceiling / route map
+  g.fillStyle(0x2f3f5b); g.fillRect(0, 0, WORLD_WIDTH, 32);
+  g.fillStyle(0xdce7ff); g.fillRect(24, 8, WORLD_WIDTH - 48, 8);
+  for (let x = 40; x < WORLD_WIDTH - 30; x += 120) {
+    g.fillStyle(0x6d7ea0); g.fillCircle(x, 12, 3);
   }
 
-  // floor details
-  g.fillStyle(0x1a2638); g.fillRect(0, HEIGHT - 160, WORLD_WIDTH, 90);
+  // car partitions + doors + windows + ads
+  for (let x = 0; x < WORLD_WIDTH; x += 440) {
+    g.fillStyle(0x4f607f); g.fillRect(x + 4, 0, 10, HEIGHT);
+    g.fillStyle(0x4f607f); g.fillRect(x + 426, 0, 10, HEIGHT);
+
+    // doors
+    g.fillStyle(0x7083a5); g.fillRect(x + 182, 72, 78, 170);
+    g.fillStyle(0x3b4c69); g.fillRect(x + 188, 78, 66, 142);
+    g.fillStyle(0x98aac7); g.fillRect(x + 219, 140, 4, 90);
+
+    // windows
+    g.fillStyle(0x5b6d8f);
+    g.fillRect(x + 56, 68, 104, 122);
+    g.fillRect(x + 280, 68, 104, 122);
+    g.fillStyle(0x27364f);
+    g.fillRect(x + 64, 76, 88, 106);
+    g.fillRect(x + 288, 76, 88, 106);
+
+    // ad boards
+    g.fillStyle(0xd8dde8); g.fillRect(x + 24, 40, 132, 20);
+    g.fillStyle(0xffc857); g.fillRect(x + 284, 40, 128, 20);
+    g.fillStyle(0x1b2940); g.fillRect(x + 10, 220, 420, 12);
+  }
+
+  // side seats
+  for (let x = 0; x < WORLD_WIDTH; x += 220) {
+    g.fillStyle(0x42608a); g.fillRect(x + 12, HEIGHT - 196, 92, 24);
+    g.fillStyle(0x42608a); g.fillRect(x + 118, HEIGHT - 196, 92, 24);
+  }
+
+  // floor detail + tactile blocks
+  g.fillStyle(0x172338); g.fillRect(0, HEIGHT - 165, WORLD_WIDTH, 95);
+  g.fillStyle(0xe6d36c); g.fillRect(0, HEIGHT - 82, WORLD_WIDTH, 8);
   for (let x = 0; x < WORLD_WIDTH; x += 70) {
-    g.fillStyle((x / 70) % 2 ? 0x202f45 : 0x263851);
-    g.fillRect(x, HEIGHT - 76, 46, 6);
+    g.fillStyle((x / 70) % 2 ? 0x1f3049 : 0x253954);
+    g.fillRect(x, HEIGHT - 75, 46, 6);
   }
 
   // handles
-  for (let x = 40; x < WORLD_WIDTH; x += 70) {
-    g.lineStyle(2, 0x92a4c6); g.lineBetween(x, 18, x, 44);
-    g.fillStyle(0xc8d4eb); g.fillCircle(x, 50, 7);
+  for (let x = 40; x < WORLD_WIDTH; x += 62) {
+    g.lineStyle(2, 0x9eb1d6); g.lineBetween(x, 16, x, 46);
+    g.fillStyle(0xe6edf9); g.fillCircle(x, 52, 7);
   }
+
+  // moving outside lights (window parallax feel)
+  const lg = scene.add.graphics();
+  lg.fillStyle(0x1e2a40);
+  for (let i = 0; i < WORLD_WIDTH; i += 90) lg.fillRect(i, 0, 24, 80);
+  lg.generateTexture('outside-lights', WORLD_WIDTH, 80);
+  lg.destroy();
+  const lights = scene.add.tileSprite(WORLD_WIDTH / 2, 130, WORLD_WIDTH, 80, 'outside-lights').setAlpha(0.22);
+  scene.tweens.add({ targets: lights, tilePositionX: 800, duration: 5000, repeat: -1 });
 
   scene.add.text(WORLD_WIDTH - 350, HEIGHT - 165, '先頭車両 / 非常ブレーキ', {
     font: '20px monospace', fill: '#ffd166'
