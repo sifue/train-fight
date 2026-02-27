@@ -6,13 +6,20 @@ Phaser.js だけで作った、静的ホスティング対応の横スクロー�
 
 ## プレイ
 
-- `index.html` をブラウザで開く
-- もしくはローカルサーバー:
+- 開発サーバー:
 
 ```bash
 cd train-rampage
-python3 -m http.server 8080
-# http://localhost:8080
+npm install
+npm run dev
+# http://localhost:5173/train-fight/
+```
+
+- 本番ビルド:
+
+```bash
+npm run build
+npm run preview
 ```
 
 ## 操作

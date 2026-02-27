@@ -12,9 +12,9 @@
 ## Track A: Core Gameplay / Architecture（メイン）
 
 ### A-1 TS移行の土台
-- [ ] `src/` 構成を作成
-- [ ] `main.ts` / `GameApp.ts` / `MainScene.ts` 作成
-- [ ] Vite + TypeScript ビルド導入
+- [x] `src/` 構成を作成
+- [x] `main.ts` / `GameApp.ts` / `MainScene.ts` 作成
+- [x] Vite + TypeScript ビルド導入
 - [ ] 既存 `game.js` の最小移植
 
 ### A-2 OOP分割
@@ -71,7 +71,7 @@
 ## 今週のマイルストーン
 
 ### M1（最優先）
-- [ ] Vite+TS導入
+- [x] Vite+TS導入
 - [ ] 既存ゲームのTS移植（動作同等）
 - [ ] UI整理（最低限）
 
