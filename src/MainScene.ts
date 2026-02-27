@@ -65,7 +65,17 @@ export class MainScene extends Phaser.Scene {
     super('MainScene');
   }
 
+  private resetRunState(): void {
+    this.ended = false;
+    this.playerHp = 5;
+    this.facing = 1;
+    this.player = undefined;
+    this.enemies = undefined;
+    this.combatSystem = undefined;
+  }
+
   create(): void {
+    this.resetRunState();
     this.physics.world.setBounds(0, 0, WORLD_WIDTH, HEIGHT);
     this.scoreSystem = new ScoreSystem(Number(window.localStorage.getItem('trainFightHiScore') ?? 0));
 
