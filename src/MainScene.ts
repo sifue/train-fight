@@ -176,6 +176,12 @@ export class MainScene extends Phaser.Scene {
     if (this.scoreSystem.syncHiScore()) {
       this.persistHiScore();
     }
+
+    // ストレス最大でゲームオーバー
+    if (!this.ended && this.stressSystem.getStressPercent() >= 100) {
+      this.cameras.main.flash(200, 255, 60, 60);
+      this.endRun('GAME OVER');
+    }
   }
 
   private persistHiScore(): void {
@@ -362,7 +368,7 @@ export class MainScene extends Phaser.Scene {
     // ---- 左側：移動・ジャンプ (左親指用) ----
     // ジャンプボタン（上部中央）
     const jumpBtn = makeCircleBtn(120, HEIGHT - 150, 40, '↑ JUMP', '14px', 0x2d5fa4, 0x7ab4ff);
-    jumpBtn.on('pointerdown', () => { this.touchJumpQueued = true; });
+    jumpBtn.on('pointerdown', () => { if (!this.ended) this.touchJumpQueued = true; });
 
     // 左移動ボタン
     const leftBtn = makeCircleBtn(62, HEIGHT - 65, 44, '◀', '22px', 0x1d3d6a, 0x6aadf0);
@@ -379,11 +385,11 @@ export class MainScene extends Phaser.Scene {
     // ---- 右側：弱攻撃・強攻撃 (右親指用) ----
     // 弱攻撃ボタン（左）
     const lightBtn = makeCircleBtn(WIDTH - 170, HEIGHT - 65, 46, '弱', '20px', 0x1a5236, 0x52d68a);
-    lightBtn.on('pointerdown', () => { this.touchLightQueued = true; });
+    lightBtn.on('pointerdown', () => { if (!this.ended) this.touchLightQueued = true; });
 
     // 強攻撃ボタン（右）
     const heavyBtn = makeCircleBtn(WIDTH - 60, HEIGHT - 65, 46, '強', '20px', 0x6b2a00, 0xf5a742);
-    heavyBtn.on('pointerdown', () => { this.touchHeavyQueued = true; });
+    heavyBtn.on('pointerdown', () => { if (!this.ended) this.touchHeavyQueued = true; });
 
     // ---- ラベル補足テキスト ----
     const labelStyle = { fontFamily: 'monospace', fontSize: '11px', color: '#9abde0' };

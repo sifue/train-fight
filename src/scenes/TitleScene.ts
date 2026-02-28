@@ -146,11 +146,11 @@ export class TitleScene extends Phaser.Scene {
   private _setupStartInput(): void {
     const audio = getAudioManager();
     const startGame = (): void => {
-      // AudioContext 開始（autoplay ポリシー対応）
+      // AudioContext 開始（autoplay ポリシー対応）＋ BGM 開始
       audio.init();
+      audio.startBGM();
       audio.playSE('uiSelect');
       this.time.delayedCall(150, () => {
-        audio.stopBGM();
         this.cameras.main.fadeOut(300, 0, 0, 0);
         this.time.delayedCall(300, () => this.scene.start('MainScene'));
       });
