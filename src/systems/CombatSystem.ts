@@ -10,6 +10,8 @@ const ATTACK_FORWARD_OFFSET = 24;
 const ATTACK_LUNGE_VELOCITY = 130;
 const HEAVY_CHAIN_WINDOW_MS = 180;
 const HEAVY_WHIFF_EXTRA_RECOVERY_MS = 180;
+const HEAVY_CHAIN_MAX_X_DISTANCE = 120;
+const HEAVY_CHAIN_MAX_Y_DISTANCE = 70;
 const ENEMY_DEFAULT_HIT_STUN_MS = 280;
 const ENEMY_HIT_TINT_RESET_MS = 80;
 const ENEMY_AIR_KNOCKBACK_Y = -120;
@@ -139,7 +141,7 @@ export class CombatSystem {
 
     const now = this.scene.time.now;
     if (now < this.attackLock) {
-      if (kind === 'heavy' && this.currentAttack === 'light') {
+      if (kind === 'heavy' && this.currentAttack === 'light' && this.canQueueHeavyChain()) {
         this.queuedHeavy = cfg;
         this.queuedHeavyExpiresAt = this.attackLock + HEAVY_CHAIN_WINDOW_MS;
       }
@@ -258,6 +260,29 @@ export class CombatSystem {
     if (enemy.hp <= 0) {
       this.handleEnemyKo(enemy, now);
     }
+  }
+
+  private canQueueHeavyChain(): boolean {
+    const player = this.getPlayer();
+    const enemies = this.getEnemies();
+    if (!player || !enemies) return false;
+
+    const facing = this.getFacing();
+
+    for (const raw of enemies.getChildren()) {
+      const enemy = raw as Enemy;
+      if (!enemy.active || enemy.hp <= 0) continue;
+
+      const dx = enemy.x - player.x;
+      const dy = Math.abs(enemy.y - player.y);
+      const inFront = facing > 0 ? dx >= 0 : dx <= 0;
+      const nearX = Math.abs(dx) <= HEAVY_CHAIN_MAX_X_DISTANCE;
+      const nearY = dy <= HEAVY_CHAIN_MAX_Y_DISTANCE;
+
+      if (inFront && nearX && nearY) return true;
+    }
+
+    return false;
   }
 
   private handleEnemyKo(enemy: Enemy, now: number): void {
