@@ -13,77 +13,33 @@
 - [x] スマホ全画面表示（Phaser Scale.FIT）
 - [x] スマホタッチコントロール最適化（◀▶↑ | 弱強）
 - [x] GitHub Actions デプロイ設定
+- [x] T1: BGM・効果音（Web Audio API プロシージャル生成）
+- [x] T2: 音量UI（BGM/SE タッチボタン・M/Nキー）
+- [x] T3: TitleScene（タイトルロゴ・操作説明・PUSH START）
+- [x] T4: ResultScene（YOU WIN/GAME OVER 演出・タッチボタン）
+- [x] T5: スコアランキング Top5（SaveManager・localStorage）
+- [x] T6: 非常ブレーキゴール・エンディング演出
+- [x] T7: 敵バリエーション 3種（normal/rush/heavy + ピクセルアートスプライト）
+- [x] T9: README.md 更新（操作方法・デプロイ方法）
+- [x] ストレス最大(100%)でゲームオーバー（STRESS OVER 専用画面）
+- [x] TitleSceneでBGM開始（autoplay対応）
+- [x] スマホ横向き強制（orientation lock）
+- [x] ゲームオーバー後のタッチボタン無効化
+- [x] HUDパネルのスマホ向けコンパクト化
+- [x] ゴール接近演出（フラッシュ・シェイク・フロートテキスト）
+- [x] キャラクターピクセルアートスプライト生成
+- [x] 漫画風ヒットエフェクト（POW!/BAM!）
 
 ---
 
-## 優先度: 高 🔴
+## 優先度: 低 🟢（残タスク）
 
-### T1: BGM・効果音実装（Web Audio API）
-- Web Audio API で SE を実装（軽攻撃・強攻撃・被弾・敵撃破）
-- BGM ループ（8ビット風シンセ、テンポ 140BPM 程度）
-- AudioManager クラスを `src/systems/AudioManager.ts` に作成
-- MainScene・CombatSystem から AudioManager を呼び出す
-
-### T2: 音量UIパネル（BGM/SE独立調整）
-- 画面内に音量スライダー or ボタン UI（BGM/SE 各 0〜1）
-- 設定を localStorage に保存・復元
-- スマホ対応（タップで ±10%）
-
-### T3: タイトル画面作成
-- `src/scenes/TitleScene.ts` を作成
-- タイトルロゴ・PUSH START 点滅
-- 操作説明（キーボード / タッチ両対応）
-- START ボタン → MainScene 遷移
-
-### T4: エンディング画面改善（ResultScene）
-- `src/scenes/ResultScene.ts` を作成
-- YOU WIN / GAME OVER を大きく演出（フェードイン）
-- スコア・Hi-Score 表示
-- タッチ対応「もう一度」「タイトルへ」ボタン
-
----
-
-## 優先度: 中 🟡
-
-### T5: スコアランキング（Top 5）
-- localStorage に上位5件を保存
-- ResultScene でランキング表示
-- SaveManager クラス `src/core/SaveManager.ts` に整理
-
-### T6: 非常ブレーキゴールとエンディング
-- WORLD_WIDTH 末端に「先頭車両」エリアを作成
-- ゴールゾーンに触れると非常ブレーキ演出 → YOU WIN
-- ゲームクリア専用演出（画面フラッシュ・SE）
-
-### T7: 敵バリエーション追加（3種類に明確化）
-- 通常モブ（Normal）: 既存
-- 突進モブ（Rush）: 低 HP・高速突進
-- 重量モブ（Heavy）: 高 HP・低速・高ダメージ
-- 各種のドット絵風 Graphics 描画を差別化
-
----
-
-## 優先度: 低 🟢
-
-### T8: ドット絵スプライト導入（アニメーション）
-- 主人公: 待機/歩行/攻撃/被弾/勝利 アニメーション
-- 敵: 3種類それぞれのアニメーション
-- TextureManager または 外部ドット絵アセット
-
-### T9: README.md 更新
-- 遊び方（PC操作 / スマホ操作）
-- デプロイ方法（GitHub Pages）
-- スクリーンショット追加
+### T8: 歩行アニメーション（2フレームサイクル）
+- 主人公・敵の歩行を2フレームでアニメーション化
+- キャラクターテクスチャに複数フレームを作成
+- Phaser アニメーション登録・状態に応じて再生
 
 ### T10: 中ボス実装（MidBoss）
 - 車両の区切りに出現する中ボスキャラ
 - 専用 AI（フェーズ移行）
 - 撃破で大スコアボーナス
-
----
-
-## バグ・改善メモ
-
-- [ ] スマホ横向き強制（orientation lock）の実装を検討
-- [ ] 攻撃ボタンがゲームオーバー後も反応する（ended フラグ確認済み、要テスト）
-- [ ] HUDパネルがスマホ画面の上部を多く占有（コンパクト化を検討）

@@ -476,6 +476,7 @@ export class MainScene extends Phaser.Scene {
       player.body.setVelocityX(-speed);
       this.facing = -1;
       player.setFlipX(true);
+      player.playAnim('player_walk');
       return;
     }
 
@@ -483,7 +484,12 @@ export class MainScene extends Phaser.Scene {
       player.body.setVelocityX(speed);
       this.facing = 1;
       player.setFlipX(false);
+      player.playAnim('player_walk');
+      return;
     }
+
+    // 停止中はアイドルアニメーション
+    player.playAnim('player_idle');
   }
 
   private handleJumpInput(player: Player, cursors: Phaser.Types.Input.Keyboard.CursorKeys): void {

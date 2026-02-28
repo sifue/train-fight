@@ -15,14 +15,22 @@ export class EnemyAiSystem {
   }
 
   private getChaseVelocity(enemy: Enemy, player: Player, now: number): number {
-    if (now <= enemy.stunnedUntil) return 0;
+    const isStunned = now <= enemy.stunnedUntil;
+    if (isStunned) {
+      enemy.playAnim(`${enemy.type}_idle`);
+      return 0;
+    }
 
     const dx = player.x - enemy.x;
-    if (Math.abs(dx) >= ENEMY_CHASE_RANGE) return 0;
+    if (Math.abs(dx) >= ENEMY_CHASE_RANGE) {
+      enemy.playAnim(`${enemy.type}_idle`);
+      return 0;
+    }
 
     const dir = Math.sign(dx);
     // 敵がプレイヤー方向を向く
     enemy.setFlipX(dir < 0);
+    enemy.playAnim(`${enemy.type}_walk`);
 
     return dir * enemy.aggroSpeed();
   }

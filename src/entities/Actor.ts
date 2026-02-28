@@ -28,4 +28,11 @@ export abstract class Actor extends Phaser.GameObjects.Sprite {
   resetColor(): void {
     this.clearTint();
   }
+
+  /** 現在と異なるアニメーションキーの場合のみ再生（フレームリセット防止） */
+  playAnim(key: string): void {
+    if (this.anims.currentAnim?.key !== key) {
+      this.play(key);
+    }
+  }
 }
