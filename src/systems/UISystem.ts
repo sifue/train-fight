@@ -46,19 +46,25 @@ export class UISystem {
     this.drawProgressBar();
     this.drawHudPanel();
     this.drawMissionCard();
-    this.comboText = this.scene.add.text(24, 20, '', this.uiStyle('#ffd166')).setScrollFactor(0);
-    this.scoreText = this.scene.add.text(24, 42, '', this.uiStyle('#7ce0ff')).setScrollFactor(0);
-    this.hiScoreText = this.scene.add.text(24, 64, '', this.uiStyle('#9dff9d')).setScrollFactor(0);
-    this.hpText = this.scene.add.text(24, 86, '', this.uiStyle('#ff9f9f')).setScrollFactor(0);
-    this.stressText = this.scene.add.text(24, 108, '', this.uiStyle('#ffcf8a')).setScrollFactor(0);
-    this.enemyText = this.scene.add.text(24, 130, '', this.uiStyle('#ffd6a5')).setScrollFactor(0);
-    this.soundText = this.scene.add.text(24, 152, '', { ...this.uiStyle('#d7e3ff'), fontSize: '16px' }).setScrollFactor(0);
-    const controlHint = this.isTouchDevice
-      ? '画面ボタンで操作  R: リトライ'
-      : '←→: 移動 / ↑: ジャンプ / Z: 弱 / X: 強 / M: BGM / N: SE';
-    this.scene.add
-      .text(24, 176, controlHint, { ...this.uiStyle('#d7e3ff'), fontSize: '16px' })
-      .setScrollFactor(0);
+
+    // タッチデバイスは行間を詰めてコンパクトに（操作ヒント・音量は画面ボタン側に表示済み）
+    const lineH = this.isTouchDevice ? 20 : 22;
+    const startY = this.isTouchDevice ? 16 : 20;
+
+    this.comboText   = this.scene.add.text(24, startY,              '', this.uiStyle('#ffd166', this.isTouchDevice ? '18px' : '20px')).setScrollFactor(0);
+    this.scoreText   = this.scene.add.text(24, startY + lineH,      '', this.uiStyle('#7ce0ff', this.isTouchDevice ? '18px' : '20px')).setScrollFactor(0);
+    this.hiScoreText = this.scene.add.text(24, startY + lineH * 2,  '', this.uiStyle('#9dff9d', this.isTouchDevice ? '18px' : '20px')).setScrollFactor(0);
+    this.hpText      = this.scene.add.text(24, startY + lineH * 3,  '', this.uiStyle('#ff9f9f', this.isTouchDevice ? '18px' : '20px')).setScrollFactor(0);
+    this.stressText  = this.scene.add.text(24, startY + lineH * 4,  '', this.uiStyle('#ffcf8a', this.isTouchDevice ? '18px' : '20px')).setScrollFactor(0);
+    this.enemyText   = this.scene.add.text(24, startY + lineH * 5,  '', this.uiStyle('#ffd6a5', this.isTouchDevice ? '18px' : '20px')).setScrollFactor(0);
+
+    if (!this.isTouchDevice) {
+      // PCのみ音量・操作ヒントを表示（タッチデバイスは画面ボタンで代替）
+      this.soundText = this.scene.add.text(24, startY + lineH * 6, '', { ...this.uiStyle('#d7e3ff', '16px'), fontSize: '16px' }).setScrollFactor(0);
+      this.scene.add
+        .text(24, startY + lineH * 7, '←→: 移動 / ↑: ジャンプ / Z: 弱 / X: 強 / M: BGM / N: SE', { ...this.uiStyle('#d7e3ff', '16px'), fontSize: '16px' })
+        .setScrollFactor(0);
+    }
     this.resultText = this.scene.add
       .text(WIDTH / 2, HEIGHT / 2 - 24, '', {
         ...this.uiStyle('#fff2b2'),
@@ -121,11 +127,11 @@ export class UISystem {
     this.resultText?.setText(`${message}\nPress R to retry`);
   }
 
-  private uiStyle(color: UiStyleColor): Phaser.Types.GameObjects.Text.TextStyle {
+  private uiStyle(color: UiStyleColor, fontSize = '20px'): Phaser.Types.GameObjects.Text.TextStyle {
     return {
       color,
       fontFamily: 'monospace',
-      fontSize: '20px',
+      fontSize,
       stroke: '#000000',
       strokeThickness: 3
     };
@@ -177,11 +183,13 @@ export class UISystem {
   }
 
   private drawHudPanel(): void {
+    // タッチデバイスはパネルをコンパクトに（音量・操作ヒント行を省略）
+    const panelH = this.isTouchDevice ? 142 : 195;
     const panel = this.scene.add.graphics().setScrollFactor(0).setDepth(5);
     panel.fillStyle(0x0b1220, 0.62);
-    panel.fillRoundedRect(10, 10, 590, 195, 12);
+    panel.fillRoundedRect(10, 10, 590, panelH, 12);
     panel.lineStyle(2, 0x6f86ad, 0.85);
-    panel.strokeRoundedRect(10, 10, 590, 195, 12);
+    panel.strokeRoundedRect(10, 10, 590, panelH, 12);
 
     this.scene.add
       .text(24, 4, 'TRAIN RAMPAGE STATUS', {
