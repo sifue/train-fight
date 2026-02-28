@@ -260,6 +260,9 @@ export class CombatSystem {
     this.scene.cameras.main.shake(this.attackHitbox.hitShakeMs, this.attackHitbox.hitShakeIntensity);
     this.applyHitStop(this.attackHitbox.hitStopMs);
 
+    // ヒットスパークエフェクト
+    this.spawnHitEffect(enemy.x, enemy.y - enemy.height / 2, this.currentAttack === 'heavy');
+
     // SE 再生（軽/強攻撃ヒット）
     this.playSE?.(this.currentAttack === 'heavy' ? 'heavyHit' : 'lightHit');
 
@@ -268,6 +271,53 @@ export class CombatSystem {
     if (enemy.hp <= 0) {
       this.handleEnemyKo(enemy, now);
     }
+  }
+
+  /** マンガ風ヒットスパークを生成 */
+  private spawnHitEffect(x: number, y: number, isHeavy: boolean): void {
+    const g = this.scene.add.graphics();
+    const color = isHeavy ? 0xffdf9a : 0xc8f7ff;
+    const size = isHeavy ? 26 : 16;
+    const lines = isHeavy ? 8 : 6;
+
+    g.setPosition(x, y).setDepth(16);
+    g.lineStyle(isHeavy ? 3 : 2, color, 1);
+
+    for (let i = 0; i < lines; i++) {
+      const angle = (i / lines) * Math.PI * 2;
+      const inner = size * 0.3;
+      g.lineBetween(
+        Math.cos(angle) * inner, Math.sin(angle) * inner,
+        Math.cos(angle) * size, Math.sin(angle) * size
+      );
+    }
+
+    // KO 用テキスト
+    if (isHeavy) {
+      const labels = ['POW!', 'BAM!', 'KA-POW!'];
+      const label = labels[Math.floor(Math.random() * labels.length)];
+      const txt = this.scene.add
+        .text(x + 20, y - 24, label, {
+          fontFamily: 'monospace', fontSize: '20px',
+          color: '#ffdf9a', stroke: '#000', strokeThickness: 4
+        })
+        .setDepth(17).setAngle(-15);
+      this.scene.tweens.add({
+        targets: txt,
+        y: txt.y - 30, alpha: 0,
+        duration: 380, onComplete: () => txt.destroy()
+      });
+    }
+
+    this.scene.tweens.add({
+      targets: g,
+      scaleX: isHeavy ? 2.4 : 1.8,
+      scaleY: isHeavy ? 2.4 : 1.8,
+      alpha: 0,
+      duration: isHeavy ? 280 : 180,
+      ease: 'Power2',
+      onComplete: () => g.destroy()
+    });
   }
 
   private canQueueHeavyChain(): boolean {
