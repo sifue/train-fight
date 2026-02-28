@@ -5,10 +5,11 @@ import { Actor } from './Actor';
 export type EnemyType = 'normal' | 'rush' | 'heavy';
 
 type EnemySpec = {
+  /** 当たり判定の幅 */
   w: number;
+  /** 当たり判定の高さ */
   h: number;
   hp: number;
-  color: number;
   aggroSpeed: number;
   contactDamage: number;
   hitScoreBase: number;
@@ -20,7 +21,6 @@ const ENEMY_SPECS: Record<EnemyType, EnemySpec> = {
     w: 28,
     h: 52,
     hp: 18,
-    color: 0xd1d5db,
     aggroSpeed: 74,
     contactDamage: 1,
     hitScoreBase: 10,
@@ -30,7 +30,6 @@ const ENEMY_SPECS: Record<EnemyType, EnemySpec> = {
     w: 24,
     h: 48,
     hp: 14,
-    color: 0x8bb1ff,
     aggroSpeed: 112,
     contactDamage: 1,
     hitScoreBase: 14,
@@ -40,7 +39,6 @@ const ENEMY_SPECS: Record<EnemyType, EnemySpec> = {
     w: 36,
     h: 60,
     hp: 34,
-    color: 0xb05b5b,
     aggroSpeed: 46,
     contactDamage: 2,
     hitScoreBase: 22,
@@ -52,14 +50,19 @@ export class Enemy extends Actor {
   hp: number;
   readonly maxHp: number;
   readonly type: EnemyType;
+  /** 当たり判定サイズ（body設定用） */
+  readonly bodyW: number;
+  readonly bodyH: number;
 
   constructor(scene: Phaser.Scene, x: number, type: EnemyType) {
     const spec = ENEMY_SPECS[type];
-    super(scene, x, GROUND_Y - 2, spec.w, spec.h, spec.color);
+    super(scene, x, GROUND_Y - 2, `char_${type}`);
 
     this.type = type;
     this.hp = spec.hp;
     this.maxHp = spec.hp;
+    this.bodyW = spec.w;
+    this.bodyH = spec.h;
   }
 
   static randomType(rng = Math.random()): EnemyType {

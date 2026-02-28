@@ -8,6 +8,7 @@ import { UISystem, UiSnapshot } from './systems/UISystem';
 import { CombatSystem } from './systems/CombatSystem';
 import { EnemyAiSystem } from './systems/EnemyAiSystem';
 import { TrainBackgroundRenderer } from './renderers/TrainBackgroundRenderer';
+import { CharacterTextureFactory } from './renderers/CharacterTextureFactory';
 import { getAudioManager } from './systems/AudioManager';
 import { SaveManager } from './core/SaveManager';
 import {
@@ -101,6 +102,9 @@ export class MainScene extends Phaser.Scene {
     this.resetRunState();
     this.physics.world.setBounds(0, 0, WORLD_WIDTH, HEIGHT);
     this.scoreSystem = new ScoreSystem(SaveManager.getHiScore());
+
+    // キャラクターテクスチャを先に生成
+    new CharacterTextureFactory(this).createAll();
 
     new TrainBackgroundRenderer(this).draw();
 
@@ -571,6 +575,7 @@ export class MainScene extends Phaser.Scene {
   }
 
   private configureEnemyPhysics(enemy: Enemy): void {
+    enemy.body.setSize(enemy.bodyW, enemy.bodyH);
     enemy.body.setDragX(ENEMY_DRAG_X);
     enemy.body.setMaxVelocity(ENEMY_MAX_VELOCITY_X, ENEMY_MAX_VELOCITY_Y);
     enemy.body.setCollideWorldBounds(true);

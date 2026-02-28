@@ -1,29 +1,31 @@
 import Phaser from 'phaser';
 
-export abstract class Actor extends Phaser.GameObjects.Rectangle {
+/**
+ * Actor - プレイヤー・敵共通の基底クラス
+ * Phaser.GameObjects.Sprite を継承（ドット絵テクスチャ対応）
+ */
+export abstract class Actor extends Phaser.GameObjects.Sprite {
   declare body: Phaser.Physics.Arcade.Body;
 
-  protected readonly baseColor: number;
   stunnedUntil = 0;
 
   constructor(
     scene: Phaser.Scene,
     x: number,
     y: number,
-    width: number,
-    height: number,
-    color: number
+    texture: string
   ) {
-    super(scene, x, y, width, height, color);
+    super(scene, x, y, texture);
     this.setOrigin(0.5, 1);
-    this.baseColor = color;
   }
 
+  /** 被弾フラッシュ: 色を tint で上書き */
   flash(color: number): void {
-    this.setFillStyle(color);
+    this.setTint(color);
   }
 
+  /** tint をリセット */
   resetColor(): void {
-    this.setFillStyle(this.baseColor);
+    this.clearTint();
   }
 }

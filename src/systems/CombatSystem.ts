@@ -304,7 +304,7 @@ export class CombatSystem {
 
     enemy.body.setVelocityX(this.getFacing() * (this.attackHitbox.push + koProfile.pushBonus));
     enemy.body.setVelocityY(koProfile.launchY);
-    enemy.setFillStyle(0xfff1b5);
+    enemy.setTint(0xfff1b5);
     this.scene.tweens.add({
       targets: enemy,
       angle: this.getFacing() * Phaser.Math.Between(ENEMY_KO_ROTATION_MIN, ENEMY_KO_ROTATION_MAX),
