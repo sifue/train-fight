@@ -1,7 +1,17 @@
 /**
  * AudioManager - Web Audio API を使ったBGM・SE管理
  * ファイル不要のプロシージャル音源実装
+ *
+ * シーン間で共有するためシングルトンとして提供
  */
+
+let _sharedInstance: AudioManager | null = null;
+
+/** シーン間で共有するシングルトンインスタンスを取得 */
+export function getAudioManager(): AudioManager {
+  if (!_sharedInstance) _sharedInstance = new AudioManager();
+  return _sharedInstance;
+}
 
 export type SeType = 'lightHit' | 'heavyHit' | 'playerDamage' | 'enemyDefeat' | 'gameOver' | 'victory' | 'uiSelect';
 

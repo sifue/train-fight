@@ -1,6 +1,8 @@
 import Phaser from 'phaser';
 import { HEIGHT, WIDTH } from './constants';
+import { TitleScene } from './scenes/TitleScene';
 import { MainScene } from './MainScene';
+import { ResultScene } from './scenes/ResultScene';
 
 export function createGameApp(parent = 'game'): Phaser.Game {
   return new Phaser.Game({
@@ -21,6 +23,8 @@ export function createGameApp(parent = 'game'): Phaser.Game {
       width: WIDTH,
       height: HEIGHT,
     },
-    scene: [MainScene]
+    // TitleScene → MainScene → ResultScene の順で登録
+    // 最初に起動するシーンは配列の先頭
+    scene: [TitleScene, MainScene, ResultScene]
   });
 }

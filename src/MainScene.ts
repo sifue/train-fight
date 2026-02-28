@@ -8,7 +8,7 @@ import { UISystem, UiSnapshot } from './systems/UISystem';
 import { CombatSystem } from './systems/CombatSystem';
 import { EnemyAiSystem } from './systems/EnemyAiSystem';
 import { TrainBackgroundRenderer } from './renderers/TrainBackgroundRenderer';
-import { AudioManager } from './systems/AudioManager';
+import { getAudioManager } from './systems/AudioManager';
 import {
   AttackProfile,
   ENEMY_DRAG_X,
@@ -65,7 +65,7 @@ export class MainScene extends Phaser.Scene {
   private touchUiObjects: Phaser.GameObjects.GameObject[] = [];
 
   private facing = 1;
-  private readonly audioManager = new AudioManager();
+  private readonly audioManager = getAudioManager();
   private scoreSystem = new ScoreSystem(0);
   private stressSystem = new StressSystem();
   private uiSystem = new UISystem(this, 'ontouchstart' in window || navigator.maxTouchPoints > 0);
@@ -444,9 +444,27 @@ export class MainScene extends Phaser.Scene {
 
     // ゲーム終了 SE・BGM停止
     this.audioManager.stopBGM();
-    this.audioManager.playSE(message.includes('WIN') ? 'victory' : 'gameOver');
+    const isWin = message.includes('WIN');
+    this.audioManager.playSE(isWin ? 'victory' : 'gameOver');
 
-    this.uiSystem.showResult(message);
+    // Hi-Score を確定保存
+    if (this.scoreSystem.syncHiScore()) this.persistHiScore();
+
+    // ResultScene へ遷移（演出後）
+    const delay = isWin ? 1800 : 1200;
+    this.time.delayedCall(delay, () => {
+      this.cameras.main.fadeOut(400, 0, 0, 0);
+    });
+    this.time.delayedCall(delay + 400, () => {
+      this.scene.start('ResultScene', {
+        result: isWin ? 'win' : 'lose',
+        score: this.scoreSystem.getScore(),
+        hiScore: this.scoreSystem.getHiScore()
+      });
+    });
+
+    // 暫定テキスト（遷移まで表示）
+    this.uiSystem.showResult(isWin ? 'YOU WIN!' : 'GAME OVER');
   }
 
   private stopAllEnemies(): void {
