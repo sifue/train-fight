@@ -14,6 +14,13 @@ export function createGameApp(parent = 'game'): Phaser.Game {
       default: 'arcade',
       arcade: { gravity: { x: 0, y: 1500 }, debug: false }
     },
+    scale: {
+      // 画面サイズに合わせてアスペクト比を維持しながら最大拡大
+      mode: Phaser.Scale.FIT,
+      autoCenter: Phaser.Scale.CENTER_BOTH,
+      width: WIDTH,
+      height: HEIGHT,
+    },
     scene: [MainScene]
   });
 }

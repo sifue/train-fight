@@ -15,6 +15,7 @@ export type UiSnapshot = {
 
 export class UISystem {
   private readonly scene: Phaser.Scene;
+  private readonly isTouchDevice: boolean;
   private comboText?: Phaser.GameObjects.Text;
   private scoreText?: Phaser.GameObjects.Text;
   private hiScoreText?: Phaser.GameObjects.Text;
@@ -24,8 +25,9 @@ export class UISystem {
   private missionText?: Phaser.GameObjects.Text;
   private resultText?: Phaser.GameObjects.Text;
 
-  constructor(scene: Phaser.Scene) {
+  constructor(scene: Phaser.Scene, isTouchDevice = false) {
     this.scene = scene;
+    this.isTouchDevice = isTouchDevice;
   }
 
   create(): void {
@@ -37,8 +39,11 @@ export class UISystem {
     this.hpText = this.scene.add.text(24, 98, '', this.uiStyle('#ff9f9f')).setScrollFactor(0);
     this.stressText = this.scene.add.text(24, 124, '', this.uiStyle('#ffcf8a')).setScrollFactor(0);
     this.enemyText = this.scene.add.text(24, 150, '', this.uiStyle('#ffd6a5')).setScrollFactor(0);
+    const controlHint = this.isTouchDevice
+      ? '画面ボタンで操作  R: リトライ'
+      : '← →: 移動 / ↑: ジャンプ / Z: 弱攻撃 / X: 強攻撃 / R: リトライ';
     this.scene.add
-      .text(24, 176, '← →: move / ↑: jump / Z X: attack', this.uiStyle('#d7e3ff'))
+      .text(24, 176, controlHint, this.uiStyle('#d7e3ff'))
       .setScrollFactor(0);
     this.resultText = this.scene.add
       .text(WIDTH / 2, HEIGHT / 2 - 24, '', {

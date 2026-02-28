@@ -1,34 +1,32 @@
-:root {
-  --bg: #0e1118;
-  --fg: #e8edf4;
-  --accent: #ff4d4d;
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: #0a0d13;
+  /* スマホでのスクロール・ズーム無効化 */
+  touch-action: none;
+  -webkit-user-select: none;
+  user-select: none;
 }
-* { box-sizing: border-box; }
+
 body {
-  margin: 0;
   font-family: 'Segoe UI', 'Hiragino Sans', sans-serif;
-  background: linear-gradient(180deg, #0f1725, #0a0d13);
-  color: var(--fg);
+  color: #e8edf4;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
-#hud-wrap {
-  max-width: 1000px;
-  margin: 14px auto 6px;
-  padding: 0 12px;
-}
-h1 {
-  margin: 0;
-  letter-spacing: 0.08em;
-  font-size: 1.1rem;
-}
-.sub, .controls {
-  margin: 4px 0;
-  opacity: 0.9;
-  font-size: 0.9rem;
-}
+
 #game {
-  max-width: 1000px;
-  margin: 0 auto 20px;
-  border: 2px solid #3a455f;
-  box-shadow: 0 0 20px rgba(0,0,0,0.35);
+  display: block;
+  /* Phaserのcanvasがここに挿入される */
 }
-canvas { display: block; image-rendering: pixelated; }
+
+canvas {
+  display: block;
+  image-rendering: pixelated;
+  /* フォーカスアウトライン非表示 */
+  outline: none;
+}

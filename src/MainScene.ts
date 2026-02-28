@@ -59,11 +59,13 @@ export class MainScene extends Phaser.Scene {
   private touchJumpQueued = false;
   private touchLightQueued = false;
   private touchHeavyQueued = false;
+  // タッチボタンを保持（リセット時に破棄するため）
+  private touchUiObjects: Phaser.GameObjects.GameObject[] = [];
 
   private facing = 1;
   private scoreSystem = new ScoreSystem(0);
   private stressSystem = new StressSystem();
-  private uiSystem = new UISystem(this);
+  private uiSystem = new UISystem(this, 'ontouchstart' in window || navigator.maxTouchPoints > 0);
   private combatSystem?: CombatSystem;
   private enemyAiSystem = new EnemyAiSystem();
   private playerHp = PLAYER_MAX_HP;
@@ -81,6 +83,7 @@ export class MainScene extends Phaser.Scene {
     this.touchJumpQueued = false;
     this.touchLightQueued = false;
     this.touchHeavyQueued = false;
+    this.touchUiObjects = [];
     this.player = undefined;
     this.enemies = undefined;
     this.combatSystem = undefined;
@@ -230,7 +233,11 @@ export class MainScene extends Phaser.Scene {
     this.xKey = bindKey(Phaser.Input.Keyboard.KeyCodes.X);
     this.rKey = bindKey(Phaser.Input.Keyboard.KeyCodes.R);
 
-    if (this.isTouchDevice()) this.setupTouchControls();
+    if (this.isTouchDevice()) {
+      // 5本指同時タッチに対応するため追加ポインタを確保
+      this.input.addPointer(4);
+      this.setupTouchControls();
+    }
   }
 
   private isTouchDevice(): boolean {
@@ -238,47 +245,69 @@ export class MainScene extends Phaser.Scene {
   }
 
   private setupTouchControls(): void {
-    // left movement pad area
-    const moveZone = this.add.rectangle(130, HEIGHT - 90, 220, 140, 0x2f4369, 0.2).setScrollFactor(0).setDepth(30);
-    moveZone.setInteractive();
+    const objs = this.touchUiObjects;
 
-    const moveByPointer = (pointer: Phaser.Input.Pointer): void => {
-      const dx = Phaser.Math.Clamp((pointer.x - moveZone.x) / 70, -1, 1);
-      this.touchMoveAxis = Math.abs(dx) < 0.25 ? 0 : dx;
-    };
+    // ---- 半透明背景パネル ----
+    // 左側（移動操作エリア）
+    const leftPanel = this.add.graphics().setScrollFactor(0).setDepth(28);
+    leftPanel.fillStyle(0x0a1a30, 0.35);
+    leftPanel.fillRoundedRect(10, HEIGHT - 185, 230, 175, 18);
+    objs.push(leftPanel);
 
-    moveZone.on('pointerdown', (p: Phaser.Input.Pointer) => moveByPointer(p));
-    moveZone.on('pointermove', (p: Phaser.Input.Pointer) => {
-      if (!p.isDown) return;
-      moveByPointer(p);
-    });
-    const resetMove = (): void => {
-      this.touchMoveAxis = 0;
-    };
-    moveZone.on('pointerup', resetMove);
-    moveZone.on('pointerout', resetMove);
+    // 右側（攻撃操作エリア）
+    const rightPanel = this.add.graphics().setScrollFactor(0).setDepth(28);
+    rightPanel.fillStyle(0x1a0a10, 0.35);
+    rightPanel.fillRoundedRect(WIDTH - 240, HEIGHT - 130, 230, 120, 18);
+    objs.push(rightPanel);
 
-    const makeBtn = (x: number, y: number, label: string, color: number, onTap: () => void): void => {
-      const btn = this.add.circle(x, y, 36, color, 0.35).setScrollFactor(0).setDepth(30);
-      btn.setStrokeStyle(2, 0xffffff, 0.7);
+    // ---- ボタン作成ヘルパー ----
+    const makeCircleBtn = (
+      x: number, y: number, radius: number,
+      label: string, fontSize: string,
+      fillColor: number, strokeColor: number
+    ): Phaser.GameObjects.Arc => {
+      const btn = this.add.circle(x, y, radius, fillColor, 0.55)
+        .setScrollFactor(0).setDepth(30);
+      btn.setStrokeStyle(2.5, strokeColor, 0.9);
       btn.setInteractive();
-      this.add
-        .text(x, y, label, { fontFamily: 'monospace', fontSize: '18px', color: '#ffffff' })
-        .setOrigin(0.5)
-        .setScrollFactor(0)
-        .setDepth(31);
-      btn.on('pointerdown', onTap);
+      const txt = this.add
+        .text(x, y, label, { fontFamily: 'monospace', fontSize, color: '#ffffff', stroke: '#000', strokeThickness: 3 })
+        .setOrigin(0.5).setScrollFactor(0).setDepth(31);
+      objs.push(btn, txt);
+      return btn;
     };
 
-    makeBtn(WIDTH - 190, HEIGHT - 88, 'J', 0x4d7bc8, () => {
-      this.touchJumpQueued = true;
-    });
-    makeBtn(WIDTH - 110, HEIGHT - 130, 'L', 0x52b788, () => {
-      this.touchLightQueued = true;
-    });
-    makeBtn(WIDTH - 60, HEIGHT - 65, 'H', 0xd97706, () => {
-      this.touchHeavyQueued = true;
-    });
+    // ---- 左側：移動・ジャンプ (左親指用) ----
+    // ジャンプボタン（上部中央）
+    const jumpBtn = makeCircleBtn(120, HEIGHT - 150, 40, '↑ JUMP', '14px', 0x2d5fa4, 0x7ab4ff);
+    jumpBtn.on('pointerdown', () => { this.touchJumpQueued = true; });
+
+    // 左移動ボタン
+    const leftBtn = makeCircleBtn(62, HEIGHT - 65, 44, '◀', '22px', 0x1d3d6a, 0x6aadf0);
+    leftBtn.on('pointerdown', () => { this.touchMoveAxis = -1; });
+    leftBtn.on('pointerup',   () => { if (this.touchMoveAxis < 0) this.touchMoveAxis = 0; });
+    leftBtn.on('pointerout',  () => { if (this.touchMoveAxis < 0) this.touchMoveAxis = 0; });
+
+    // 右移動ボタン
+    const rightBtn = makeCircleBtn(178, HEIGHT - 65, 44, '▶', '22px', 0x1d3d6a, 0x6aadf0);
+    rightBtn.on('pointerdown', () => { this.touchMoveAxis = 1; });
+    rightBtn.on('pointerup',   () => { if (this.touchMoveAxis > 0) this.touchMoveAxis = 0; });
+    rightBtn.on('pointerout',  () => { if (this.touchMoveAxis > 0) this.touchMoveAxis = 0; });
+
+    // ---- 右側：弱攻撃・強攻撃 (右親指用) ----
+    // 弱攻撃ボタン（左）
+    const lightBtn = makeCircleBtn(WIDTH - 170, HEIGHT - 65, 46, '弱', '20px', 0x1a5236, 0x52d68a);
+    lightBtn.on('pointerdown', () => { this.touchLightQueued = true; });
+
+    // 強攻撃ボタン（右）
+    const heavyBtn = makeCircleBtn(WIDTH - 60, HEIGHT - 65, 46, '強', '20px', 0x6b2a00, 0xf5a742);
+    heavyBtn.on('pointerdown', () => { this.touchHeavyQueued = true; });
+
+    // ---- ラベル補足テキスト ----
+    const labelStyle = { fontFamily: 'monospace', fontSize: '11px', color: '#9abde0' };
+    const lLabel = this.add.text(120, HEIGHT - 10, '移動 / ジャンプ', labelStyle).setOrigin(0.5).setScrollFactor(0).setDepth(31);
+    const rLabel = this.add.text(WIDTH - 115, HEIGHT - 10, '攻撃', labelStyle).setOrigin(0.5).setScrollFactor(0).setDepth(31);
+    objs.push(lLabel, rLabel);
   }
 
   private updatePlayerInput(): void {
