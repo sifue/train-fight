@@ -26,7 +26,7 @@ export class CharacterTextureFactory {
   // ---- プレイヤー: 萌え系女子高生 5フレーム(idle=0, walkA=1, walkB=2, punch=3, kick=4) ----
   // W=36, H=64 で解像度アップ → 大きな目・ミニスカ・ニーハイソックスを表現
   private createPlayerSpritesheet(): void {
-    const W = 36, H = 64, FRAMES = 5;
+    const W = 48, H = 64, FRAMES = 5;
     const c = this.makeMultiFrameCanvas('char_player', W, H, FRAMES);
     const ctx = c.context;
 
@@ -151,16 +151,18 @@ export class CharacterTextureFactory {
       ctx.fillRect(ox + 2,  24, 6, 14);   // 左腕後
       ctx.fillRect(ox + 28, 20, 6, 14);   // 右腕前
     } else if (frame === 3) {
-      // パンチ: 左腕を引いて右腕を力強く突き出す
+      // パンチ: 左腕引き、右腕を大きくリーチして前方に伸ばす
       ctx.fillRect(ox + 3,  26, 6, 12);   // 左腕（引き）
-      ctx.fillRect(ox + 27, 19, 7,  6);   // 右腕（突き出し）
-      // 右拳（肌色）
+      ctx.fillRect(ox + 27, 20, 6,  5);   // 右肩〜上腕
+      ctx.fillRect(ox + 31, 19,10,  4);   // 右前腕（長く水平に）
+      // 右拳（肌色・大きな拳！）
       ctx.fillStyle = '#fce8d0';
-      ctx.fillRect(ox + 30, 17, 6,  7);
-      ctx.fillStyle = '#d4b090';          // 拳の指の影
-      ctx.fillRect(ox + 30, 19, 1,  5);
-      ctx.fillRect(ox + 32, 19, 1,  5);
-      ctx.fillRect(ox + 34, 19, 1,  4);
+      ctx.fillRect(ox + 39, 17, 8,  8);
+      ctx.fillStyle = '#d4b090';           // 指の影
+      ctx.fillRect(ox + 39, 19, 1,  5);
+      ctx.fillRect(ox + 41, 19, 1,  5);
+      ctx.fillRect(ox + 43, 19, 1,  5);
+      ctx.fillRect(ox + 45, 19, 1,  4);
     } else {
       // キック: 両腕を広げてバランス
       ctx.fillRect(ox + 1,  20, 7, 15);
@@ -183,9 +185,10 @@ export class CharacterTextureFactory {
       ctx.fillRect(ox + 11, 44, 7, 10);
       ctx.fillRect(ox + 18, 44, 7, 10);
     } else {
-      // キック: 左軸足、右足を高く蹴り上げ
-      ctx.fillRect(ox + 11, 44, 7, 10);  // 左太もも（軸足）
-      ctx.fillRect(ox + 20, 37, 9,  7);  // 右太もも（蹴り足、スカート横）
+      // キック: 左軸足、右足を大きく前方に蹴り出す
+      ctx.fillRect(ox + 11, 44, 7, 10);   // 左太もも（軸足）
+      ctx.fillRect(ox + 20, 37, 8,  7);   // 右太もも（前方）
+      ctx.fillRect(ox + 26, 39,10,  6);   // 右ひざ〜すね（さらに前へ）
     }
 
     // ---- ニーハイソックス（白） ----
@@ -204,7 +207,7 @@ export class CharacterTextureFactory {
       ctx.fillRect(ox + 18, 54, 7, 6);
     } else {
       ctx.fillRect(ox + 11, 54, 7, 6);   // 左足ソックス
-      ctx.fillRect(ox + 20, 42, 9, 5);   // 右足ソックス（蹴り足）
+      ctx.fillRect(ox + 34, 43, 8, 5);   // 右足ソックス（蹴り足先、遠い！）
     }
 
     // ---- 靴 ----
@@ -223,7 +226,7 @@ export class CharacterTextureFactory {
       ctx.fillRect(ox + 17, 60, 9, 4);
     } else {
       ctx.fillRect(ox + 10, 60, 9, 4);   // 左靴
-      ctx.fillRect(ox + 20, 47, 9, 4);   // 右靴（蹴り足先）
+      ctx.fillRect(ox + 38, 46, 9, 4);   // 右靴（最遠端！ox+38〜47）
     }
   }
 
