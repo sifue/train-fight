@@ -26,7 +26,8 @@ body {
 
 canvas {
   display: block;
-  image-rendering: pixelated;
+  /* pixelArt モード無効化に合わせてスムーススケーリングを使用 */
+  image-rendering: auto;
   /* フォーカスアウトライン非表示 */
   outline: none;
 }

@@ -11,6 +11,7 @@ import { TrainBackgroundRenderer } from './renderers/TrainBackgroundRenderer';
 import { CharacterTextureFactory } from './renderers/CharacterTextureFactory';
 import { getAudioManager } from './systems/AudioManager';
 import { SaveManager } from './core/SaveManager';
+import { isTouchOnlyDevice } from './utils/deviceUtils';
 import {
   AttackProfile,
   ENEMY_DRAG_X,
@@ -73,7 +74,7 @@ export class MainScene extends Phaser.Scene {
   private readonly audioManager = getAudioManager();
   private scoreSystem = new ScoreSystem(0);
   private stressSystem = new StressSystem();
-  private uiSystem = new UISystem(this, 'ontouchstart' in window || navigator.maxTouchPoints > 0);
+  private uiSystem = new UISystem(this, isTouchOnlyDevice());
   private combatSystem?: CombatSystem;
   private enemyAiSystem = new EnemyAiSystem();
   private hpBarGfx?: Phaser.GameObjects.Graphics;
@@ -365,7 +366,7 @@ export class MainScene extends Phaser.Scene {
   }
 
   private isTouchDevice(): boolean {
-    return 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+    return isTouchOnlyDevice();
   }
 
   private setupTouchControls(): void {

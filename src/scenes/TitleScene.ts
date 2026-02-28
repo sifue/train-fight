@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { HEIGHT, WIDTH } from '../constants';
 import { getAudioManager } from '../systems/AudioManager';
+import { isTouchOnlyDevice } from '../utils/deviceUtils';
 
 /**
  * TitleScene - タイトル画面
@@ -79,7 +80,7 @@ export class TitleScene extends Phaser.Scene {
   }
 
   private _drawControls(): void {
-    const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+    const isTouchDevice = isTouchOnlyDevice();
 
     // 操作説明パネル
     const panel = this.add.graphics();

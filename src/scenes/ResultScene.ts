@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { HEIGHT, WIDTH } from '../constants';
 import { SaveManager } from '../core/SaveManager';
+import { isTouchOnlyDevice } from '../utils/deviceUtils';
 
 export type ResultData = {
   result: 'win' | 'lose' | 'stress';
@@ -57,8 +58,8 @@ export class ResultScene extends Phaser.Scene {
     const subMsg  = isWin ? '非常ブレーキ作動！電車を止めた！' : isStress ? 'ストレスで限界に達した...' : 'やられてしまった...';
     const color   = isWin ? '#9dff9d' : isStress ? '#ffaa44' : '#ff9f9f';
 
-    // 大きなメインメッセージ
-    const mainText = this.add.text(WIDTH / 2, HEIGHT / 2 - 110, mainMsg, {
+    // 大きなメインメッセージ（上部に配置）
+    const mainText = this.add.text(WIDTH / 2, 68, mainMsg, {
       fontFamily: 'monospace',
       fontSize: '72px',
       color,
@@ -77,7 +78,7 @@ export class ResultScene extends Phaser.Scene {
       ease: 'Back.easeOut'
     });
 
-    this.add.text(WIDTH / 2, HEIGHT / 2 - 40, subMsg, {
+    this.add.text(WIDTH / 2, 138, subMsg, {
       fontFamily: 'monospace',
       fontSize: '20px',
       color: '#d7e3ff',
@@ -97,13 +98,23 @@ export class ResultScene extends Phaser.Scene {
   private _drawScores(score: number, hiScore: number): void {
     const isNewRecord = score >= hiScore && score > 0;
 
+    // 左カラム: スコアパネル（ランキングパネルと横並び）
+    const panelX = WIDTH / 4;          // 240
+    const panelY = 165;
+    const panelW = WIDTH / 2 - 30;     // 450
+    const panelH = 120;
+
     const scorePanelBg = this.add.graphics();
     scorePanelBg.fillStyle(0x0b1220, 0.75);
-    scorePanelBg.fillRoundedRect(WIDTH / 2 - 200, HEIGHT / 2 - 10, 400, 110, 12);
+    scorePanelBg.fillRoundedRect(panelX - panelW / 2, panelY, panelW, panelH, 12);
     scorePanelBg.lineStyle(2, 0x4a6a9a, 0.7);
-    scorePanelBg.strokeRoundedRect(WIDTH / 2 - 200, HEIGHT / 2 - 10, 400, 110, 12);
+    scorePanelBg.strokeRoundedRect(panelX - panelW / 2, panelY, panelW, panelH, 12);
 
-    this.add.text(WIDTH / 2, HEIGHT / 2 + 22, `SCORE: ${score.toLocaleString()}`, {
+    this.add.text(panelX, panelY + 14, '-- RESULT --', {
+      fontFamily: 'monospace', fontSize: '13px', color: '#7ca4cc'
+    }).setOrigin(0.5);
+
+    this.add.text(panelX, panelY + 44, `SCORE: ${score.toLocaleString()}`, {
       fontFamily: 'monospace',
       fontSize: '28px',
       color: '#7ce0ff',
@@ -113,9 +124,9 @@ export class ResultScene extends Phaser.Scene {
 
     const hiScoreLabel = isNewRecord ? '★ NEW HI-SCORE! ★' : `HI-SCORE: ${hiScore.toLocaleString()}`;
     const hiColor = isNewRecord ? '#ffd166' : '#9dff9d';
-    const newRecord = this.add.text(WIDTH / 2, HEIGHT / 2 + 60, hiScoreLabel, {
+    const newRecord = this.add.text(panelX, panelY + 86, hiScoreLabel, {
       fontFamily: 'monospace',
-      fontSize: isNewRecord ? '22px' : '20px',
+      fontSize: isNewRecord ? '20px' : '18px',
       color: hiColor,
       stroke: '#000000',
       strokeThickness: 3
@@ -135,36 +146,37 @@ export class ResultScene extends Phaser.Scene {
   }
 
   private _drawRanking(ranking: { score: number; date: string }[], currentScore: number): void {
-    const panelX = WIDTH / 2 + 120;
-    const panelY = HEIGHT / 2 - 10;
-    const panelW = 220;
-    const panelH = 118;
+    // 右カラム: ランキングパネル（スコアパネルの右隣）
+    const panelCX = WIDTH * 3 / 4;     // 720
+    const panelY = 165;
+    const panelW = WIDTH / 2 - 30;     // 450
+    const panelH = 120;
 
-    // ランキングパネル
     const bg = this.add.graphics();
     bg.fillStyle(0x0b1220, 0.75);
-    bg.fillRoundedRect(panelX - panelW / 2, panelY, panelW, panelH, 10);
+    bg.fillRoundedRect(panelCX - panelW / 2, panelY, panelW, panelH, 12);
     bg.lineStyle(2, 0x6a5aaa, 0.7);
-    bg.strokeRoundedRect(panelX - panelW / 2, panelY, panelW, panelH, 10);
+    bg.strokeRoundedRect(panelCX - panelW / 2, panelY, panelW, panelH, 12);
 
-    this.add.text(panelX, panelY + 14, '-- TOP 5 --', {
+    this.add.text(panelCX, panelY + 14, '-- TOP 5 --', {
       fontFamily: 'monospace', fontSize: '13px', color: '#b8a4ff'
     }).setOrigin(0.5);
 
+    const rowH = 18;
     ranking.forEach((entry, i) => {
       const isMe = entry.score === currentScore;
       const color = i === 0 ? '#ffd166' : isMe ? '#7ce0ff' : '#c8d8f8';
       const prefix = i === 0 ? '👑' : `${i + 1}.`;
-      this.add.text(panelX - panelW / 2 + 12, panelY + 30 + i * 17,
-        `${prefix} ${entry.score.toLocaleString().padStart(7)}  ${entry.date}`,
-        { fontFamily: 'monospace', fontSize: '12px', color }
+      this.add.text(panelCX - panelW / 2 + 16, panelY + 32 + i * rowH,
+        `${prefix} ${entry.score.toLocaleString().padStart(8)}  ${entry.date}`,
+        { fontFamily: 'monospace', fontSize: '13px', color }
       );
     });
   }
 
   private _drawButtons(result: 'win' | 'lose' | 'stress', score: number, hiScore: number): void {
-    const btnY = HEIGHT / 2 + 130;
-    const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+    const btnY = 340;
+    const isTouchDevice = isTouchOnlyDevice();
 
     if (isTouchDevice) {
       // タッチ用大型ボタン
@@ -179,10 +191,11 @@ export class ResultScene extends Phaser.Scene {
     }
 
     // キーボードヒント
-    const hint = isTouchDevice ? '' : 'R: もう一度プレイ  /  ESC or T: タイトルへ';
-    this.add.text(WIDTH / 2, HEIGHT - 28, hint, {
-      fontFamily: 'monospace', fontSize: '15px', color: '#6a8aaa'
-    }).setOrigin(0.5);
+    if (!isTouchDevice) {
+      this.add.text(WIDTH / 2, HEIGHT - 28, 'R: もう一度プレイ  /  ESC or T: タイトルへ', {
+        fontFamily: 'monospace', fontSize: '15px', color: '#6a8aaa'
+      }).setOrigin(0.5);
+    }
 
     // キーボード操作
     this.input.keyboard?.on('keydown', (e: KeyboardEvent) => {
