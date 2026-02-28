@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { GROUND_Y, HEIGHT, WORLD_WIDTH } from './constants';
+import { GROUND_Y, HEIGHT, WIDTH, WORLD_WIDTH } from './constants';
 import { Enemy } from './entities/Enemy';
 import { Player } from './entities/Player';
 import { ScoreSystem } from './systems/ScoreSystem';
@@ -23,13 +23,6 @@ import {
   LIGHT_ATTACK,
   PLAYER_BODY_HEIGHT,
   PLAYER_BODY_WIDTH,
-  PLAYER_DASH_DRAIN_PER_SEC,
-  PLAYER_DASH_HIT_DAMAGE_MULTIPLIER,
-  PLAYER_DASH_HIT_KNOCKBACK_MULTIPLIER,
-  PLAYER_DASH_RECOVER_PER_SEC,
-  PLAYER_DASH_STAMINA_MAX,
-  PLAYER_DASH_TURN_SPEED,
-  PLAYER_DASH_TURN_VELOCITY_GATE,
   PLAYER_DRAG_X,
   PLAYER_HIT_TINT_RESET_MS,
   PLAYER_MAX_HP,
@@ -58,10 +51,14 @@ export class MainScene extends Phaser.Scene {
   private enemies?: Phaser.Physics.Arcade.Group;
 
   private cursors?: Phaser.Types.Input.Keyboard.CursorKeys;
-  private shiftKey?: Phaser.Input.Keyboard.Key;
   private zKey?: Phaser.Input.Keyboard.Key;
   private xKey?: Phaser.Input.Keyboard.Key;
   private rKey?: Phaser.Input.Keyboard.Key;
+
+  private touchMoveAxis = 0;
+  private touchJumpQueued = false;
+  private touchLightQueued = false;
+  private touchHeavyQueued = false;
 
   private facing = 1;
   private scoreSystem = new ScoreSystem(0);
@@ -70,8 +67,6 @@ export class MainScene extends Phaser.Scene {
   private combatSystem?: CombatSystem;
   private enemyAiSystem = new EnemyAiSystem();
   private playerHp = PLAYER_MAX_HP;
-  private dashStamina = PLAYER_DASH_STAMINA_MAX;
-  private dashActive = false;
   private ended = false;
 
   constructor() {
@@ -82,8 +77,10 @@ export class MainScene extends Phaser.Scene {
     this.ended = false;
     this.playerHp = PLAYER_MAX_HP;
     this.facing = 1;
-    this.dashStamina = PLAYER_DASH_STAMINA_MAX;
-    this.dashActive = false;
+    this.touchMoveAxis = 0;
+    this.touchJumpQueued = false;
+    this.touchLightQueued = false;
+    this.touchHeavyQueued = false;
     this.player = undefined;
     this.enemies = undefined;
     this.combatSystem = undefined;
@@ -124,7 +121,7 @@ export class MainScene extends Phaser.Scene {
     const now = this.time.now;
 
     if (!this.ended) {
-      this.updatePlayerInput(delta);
+      this.updatePlayerInput();
     }
 
     this.enemyAiSystem.update(now, this.player, this.enemies, this.ended);
@@ -217,9 +214,7 @@ export class MainScene extends Phaser.Scene {
       hp: this.playerHp,
       stressPercent: this.stressSystem.getStressPercent(),
       stressCritical: this.stressSystem.isCritical(),
-      enemiesLeft: this.enemies?.countActive(true) ?? 0,
-      dashStamina: this.dashStamina,
-      dashActive: this.dashActive
+      enemiesLeft: this.enemies?.countActive(true) ?? 0
     };
   }
 
@@ -231,72 +226,95 @@ export class MainScene extends Phaser.Scene {
 
     const bindKey = (keyCode: number): Phaser.Input.Keyboard.Key => keyboard.addKey(keyCode);
 
-    this.shiftKey = bindKey(Phaser.Input.Keyboard.KeyCodes.SHIFT);
     this.zKey = bindKey(Phaser.Input.Keyboard.KeyCodes.Z);
     this.xKey = bindKey(Phaser.Input.Keyboard.KeyCodes.X);
     this.rKey = bindKey(Phaser.Input.Keyboard.KeyCodes.R);
+
+    if (this.isTouchDevice()) this.setupTouchControls();
   }
 
-  private updatePlayerInput(delta: number): void {
+  private isTouchDevice(): boolean {
+    return 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+  }
+
+  private setupTouchControls(): void {
+    // left movement pad area
+    const moveZone = this.add.rectangle(130, HEIGHT - 90, 220, 140, 0x2f4369, 0.2).setScrollFactor(0).setDepth(30);
+    moveZone.setInteractive();
+
+    const moveByPointer = (pointer: Phaser.Input.Pointer): void => {
+      const dx = Phaser.Math.Clamp((pointer.x - moveZone.x) / 70, -1, 1);
+      this.touchMoveAxis = Math.abs(dx) < 0.25 ? 0 : dx;
+    };
+
+    moveZone.on('pointerdown', (p: Phaser.Input.Pointer) => moveByPointer(p));
+    moveZone.on('pointermove', (p: Phaser.Input.Pointer) => {
+      if (!p.isDown) return;
+      moveByPointer(p);
+    });
+    const resetMove = (): void => {
+      this.touchMoveAxis = 0;
+    };
+    moveZone.on('pointerup', resetMove);
+    moveZone.on('pointerout', resetMove);
+
+    const makeBtn = (x: number, y: number, label: string, color: number, onTap: () => void): void => {
+      const btn = this.add.circle(x, y, 36, color, 0.35).setScrollFactor(0).setDepth(30);
+      btn.setStrokeStyle(2, 0xffffff, 0.7);
+      btn.setInteractive();
+      this.add
+        .text(x, y, label, { fontFamily: 'monospace', fontSize: '18px', color: '#ffffff' })
+        .setOrigin(0.5)
+        .setScrollFactor(0)
+        .setDepth(31);
+      btn.on('pointerdown', onTap);
+    };
+
+    makeBtn(WIDTH - 190, HEIGHT - 88, 'J', 0x4d7bc8, () => {
+      this.touchJumpQueued = true;
+    });
+    makeBtn(WIDTH - 110, HEIGHT - 130, 'L', 0x52b788, () => {
+      this.touchLightQueued = true;
+    });
+    makeBtn(WIDTH - 60, HEIGHT - 65, 'H', 0xd97706, () => {
+      this.touchHeavyQueued = true;
+    });
+  }
+
+  private updatePlayerInput(): void {
     const player = this.player;
     const cursors = this.cursors;
     if (!player || !cursors) return;
 
-    const wantsDash = Boolean(this.shiftKey?.isDown) && this.dashStamina > 0;
-    this.dashActive = wantsDash;
-
-    const speed = wantsDash ? PLAYER_RUN_SPEED : PLAYER_WALK_SPEED;
-
-    this.updateHorizontalMovement(player, cursors, speed, wantsDash);
+    this.updateHorizontalMovement(player, cursors, PLAYER_WALK_SPEED);
     this.handleJumpInput(player, cursors);
-    this.updateDashStamina(delta, wantsDash);
 
-    this.handleAttackInput(this.zKey, 'light', LIGHT_ATTACK);
-    this.handleAttackInput(this.xKey, 'heavy', HEAVY_ATTACK);
+    this.handleAttackInput(this.zKey, 'light', LIGHT_ATTACK, 'touchLightQueued');
+    this.handleAttackInput(this.xKey, 'heavy', HEAVY_ATTACK, 'touchHeavyQueued');
   }
 
   private updateHorizontalMovement(
     player: Player,
     cursors: Phaser.Types.Input.Keyboard.CursorKeys,
-    speed: number,
-    dashActive: boolean
+    speed: number
   ): void {
-    if (cursors.left.isDown) {
-      if (dashActive && this.facing === 1 && Math.abs(player.body.velocity.x) > PLAYER_DASH_TURN_VELOCITY_GATE) {
-        player.body.setVelocityX(-PLAYER_DASH_TURN_SPEED);
-        return;
-      }
+    const moveAxis = this.touchMoveAxis;
+    if (cursors.left.isDown || moveAxis < -0.2) {
       player.body.setVelocityX(-speed);
       this.facing = -1;
       return;
     }
 
-    if (cursors.right.isDown) {
-      if (dashActive && this.facing === -1 && Math.abs(player.body.velocity.x) > PLAYER_DASH_TURN_VELOCITY_GATE) {
-        player.body.setVelocityX(PLAYER_DASH_TURN_SPEED);
-        return;
-      }
+    if (cursors.right.isDown || moveAxis > 0.2) {
       player.body.setVelocityX(speed);
       this.facing = 1;
     }
   }
 
-  private updateDashStamina(delta: number, dashActive: boolean): void {
-    const sec = delta / 1000;
-    if (dashActive) {
-      this.dashStamina = Math.max(0, this.dashStamina - PLAYER_DASH_DRAIN_PER_SEC * sec);
-      if (this.dashStamina <= 0) this.dashActive = false;
-      return;
-    }
-
-    this.dashStamina = Math.min(
-      PLAYER_DASH_STAMINA_MAX,
-      this.dashStamina + PLAYER_DASH_RECOVER_PER_SEC * sec
-    );
-  }
-
   private handleJumpInput(player: Player, cursors: Phaser.Types.Input.Keyboard.CursorKeys): void {
-    if (Phaser.Input.Keyboard.JustDown(cursors.up) && player.body.blocked.down) {
+    const jumpPressed = Phaser.Input.Keyboard.JustDown(cursors.up) || this.touchJumpQueued;
+    this.touchJumpQueued = false;
+    if (jumpPressed && player.body.blocked.down) {
       player.body.setVelocityY(PLAYER_JUMP_VELOCITY);
     }
   }
@@ -304,9 +322,12 @@ export class MainScene extends Phaser.Scene {
   private handleAttackInput(
     key: Phaser.Input.Keyboard.Key | undefined,
     kind: 'light' | 'heavy',
-    profile: AttackProfile
+    profile: AttackProfile,
+    touchFlag: 'touchLightQueued' | 'touchHeavyQueued'
   ): void {
-    if (!key || !Phaser.Input.Keyboard.JustDown(key)) return;
+    const pressed = Boolean(key && Phaser.Input.Keyboard.JustDown(key)) || this[touchFlag];
+    this[touchFlag] = false;
+    if (!pressed) return;
     this.combatSystem?.attack(kind, profile);
   }
 
@@ -316,16 +337,12 @@ export class MainScene extends Phaser.Scene {
     const now = this.time.now;
     if (now < this.player.invulnUntil) return;
 
-    const baseDamage = enemy.contactDamage();
-    const damage = this.dashActive
-      ? Math.ceil(baseDamage * PLAYER_DASH_HIT_DAMAGE_MULTIPLIER)
-      : baseDamage;
+    const damage = enemy.contactDamage();
     this.playerHp -= damage;
     this.stressSystem.onPlayerDamaged(damage);
     this.player.invulnUntil = now + PLAYER_INVULN_MS;
     this.player.flashDamaged();
-    this.dashActive = false;
-    this.applyPlayerKnockback(enemy, this.dashActive);
+    this.applyPlayerKnockback(enemy);
     this.cameras.main.shake(110, 0.003);
 
     this.time.delayedCall(PLAYER_HIT_TINT_RESET_MS, () => this.player?.active && this.player.resetTint());
@@ -335,25 +352,17 @@ export class MainScene extends Phaser.Scene {
     }
   }
 
-  private applyPlayerKnockback(enemy: Enemy, wasDashing: boolean): void {
+  private applyPlayerKnockback(enemy: Enemy): void {
     if (!this.player) return;
 
-    const kb = wasDashing
-      ? PLAYER_KNOCKBACK_X * PLAYER_DASH_HIT_KNOCKBACK_MULTIPLIER
-      : PLAYER_KNOCKBACK_X;
-    const kbY = wasDashing
-      ? PLAYER_KNOCKBACK_Y * PLAYER_DASH_HIT_KNOCKBACK_MULTIPLIER
-      : PLAYER_KNOCKBACK_Y;
-
-    this.player.body.setVelocityX((this.player.x < enemy.x ? -1 : 1) * kb);
-    this.player.body.setVelocityY(kbY);
+    this.player.body.setVelocityX((this.player.x < enemy.x ? -1 : 1) * PLAYER_KNOCKBACK_X);
+    this.player.body.setVelocityY(PLAYER_KNOCKBACK_Y);
   }
 
   private endRun(message: string): void {
     if (!this.player || this.ended) return;
 
     this.ended = true;
-    this.dashActive = false;
     this.combatSystem?.disable();
     this.player.body.setVelocity(0, this.player.body.velocity.y);
     this.stopAllEnemies();

@@ -11,8 +11,6 @@ export type UiSnapshot = {
   stressPercent: number;
   stressCritical: boolean;
   enemiesLeft: number;
-  dashStamina: number;
-  dashActive: boolean;
 };
 
 export class UISystem {
@@ -23,7 +21,6 @@ export class UISystem {
   private hpText?: Phaser.GameObjects.Text;
   private stressText?: Phaser.GameObjects.Text;
   private enemyText?: Phaser.GameObjects.Text;
-  private dashText?: Phaser.GameObjects.Text;
   private missionText?: Phaser.GameObjects.Text;
   private resultText?: Phaser.GameObjects.Text;
 
@@ -40,9 +37,8 @@ export class UISystem {
     this.hpText = this.scene.add.text(24, 98, '', this.uiStyle('#ff9f9f')).setScrollFactor(0);
     this.stressText = this.scene.add.text(24, 124, '', this.uiStyle('#ffcf8a')).setScrollFactor(0);
     this.enemyText = this.scene.add.text(24, 150, '', this.uiStyle('#ffd6a5')).setScrollFactor(0);
-    this.dashText = this.scene.add.text(24, 176, '', this.uiStyle('#d7e3ff')).setScrollFactor(0);
     this.scene.add
-      .text(24, 202, '← →: move / ↑: jump / Z X: attack / SHIFT: dash', this.uiStyle('#d7e3ff'))
+      .text(24, 176, '← →: move / ↑: jump / Z X: attack', this.uiStyle('#d7e3ff'))
       .setScrollFactor(0);
     this.resultText = this.scene.add
       .text(WIDTH / 2, HEIGHT / 2 - 24, '', {
@@ -71,9 +67,6 @@ export class UISystem {
     this.hpText?.setText(`HP: ${Math.max(0, snapshot.hp)}`);
     this.stressText?.setText(`STRESS: ${snapshot.stressPercent}%${snapshot.stressCritical ? '  !!' : ''}`);
     this.enemyText?.setText(`ENEMY LEFT: ${snapshot.enemiesLeft}`);
-    this.dashText?.setText(
-      `DASH STAMINA: ${Math.round(snapshot.dashStamina)}${snapshot.dashActive ? '  (DASH)' : ''}`
-    );
     this.missionText?.setText(
       `- [${snapshot.enemiesLeft === 0 ? 'x' : ' '}] 車両内の敵を全滅 (${snapshot.enemiesLeft} left)\n- [${snapshot.hp > 0 ? 'x' : ' '}] HPを残して生還`
     );
@@ -96,9 +89,9 @@ export class UISystem {
   private drawHudPanel(): void {
     const panel = this.scene.add.graphics().setScrollFactor(0).setDepth(5);
     panel.fillStyle(0x0b1220, 0.62);
-    panel.fillRoundedRect(10, 10, 590, 226, 12);
+    panel.fillRoundedRect(10, 10, 590, 200, 12);
     panel.lineStyle(2, 0x6f86ad, 0.85);
-    panel.strokeRoundedRect(10, 10, 590, 226, 12);
+    panel.strokeRoundedRect(10, 10, 590, 200, 12);
 
     this.scene.add
       .text(24, 4, 'TRAIN RAMPAGE STATUS', {
