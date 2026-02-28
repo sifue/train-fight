@@ -261,7 +261,14 @@ export class MainScene extends Phaser.Scene {
         continue;
       }
       this.spawnEnemy(x);
-      x += Phaser.Math.Between(ENEMY_SPAWN_STEP_MIN, ENEMY_SPAWN_STEP_MAX);
+
+      // 進行度に応じてスポーン間隔を狭める（序盤は広め→終盤は2倍密度）
+      const progress = Math.min(1, (x - ENEMY_SPAWN_START_X) / (limit - ENEMY_SPAWN_START_X));
+      // factor: 1.2（序盤）→ 0.55（終盤）でリニア変化
+      const factor = 1.2 - progress * 0.65;
+      const stepMin = Math.max(60, Math.floor(ENEMY_SPAWN_STEP_MIN * factor));
+      const stepMax = Math.max(80, Math.floor(ENEMY_SPAWN_STEP_MAX * factor));
+      x += Phaser.Math.Between(stepMin, stepMax);
     }
   }
 

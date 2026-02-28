@@ -53,8 +53,8 @@ export const PLAYER_BODY_HEIGHT = 58;
 
 export const ENEMY_SPAWN_START_X = 460;
 export const ENEMY_SPAWN_END_MARGIN = 250;
-export const ENEMY_SPAWN_STEP_MIN = 190;
-export const ENEMY_SPAWN_STEP_MAX = 270;
+export const ENEMY_SPAWN_STEP_MIN = 110;
+export const ENEMY_SPAWN_STEP_MAX = 155;
 export const ENEMY_DRAG_X = 900;
 export const ENEMY_MAX_VELOCITY_X = 220;
 export const ENEMY_MAX_VELOCITY_Y = 1000;
