@@ -25,8 +25,13 @@ export class ScoreSystem implements ScoreEvents, ScoreReadModel {
     this.score += baseScore + Math.min(50, this.combo * 2);
   }
 
-  onEnemyKo(bonusScore: number): void {
-    this.score += bonusScore + Math.min(120, this.combo * 4);
+  onEnemyKo(bonusScore: number, attackKind?: 'light' | 'heavy'): number {
+    // コンボ2以上でキック（heavy）止めを刺した場合にキックフィニッシャーボーナス加算
+    const finisherBonus = attackKind === 'heavy' && this.combo >= 2
+      ? this.combo * 15
+      : 0;
+    this.score += bonusScore + Math.min(120, this.combo * 4) + finisherBonus;
+    return finisherBonus;
   }
 
   /** ゴールクリアボーナスなど固定値加算 */

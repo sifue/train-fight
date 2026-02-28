@@ -383,10 +383,35 @@ export class CombatSystem {
     // K.O.!! ポップアップテキスト
     this.spawnKoText(enemy.x, enemy.y - enemy.height / 2);
 
-    this.scoreSystem.onEnemyKo(enemy.koBonus());
+    const finisherBonus = this.scoreSystem.onEnemyKo(enemy.koBonus(), this.currentAttack);
+    if (finisherBonus > 0) {
+      this.spawnKickFinisherText(enemy.x, enemy.y - enemy.height / 2, finisherBonus);
+    }
     this.stressSystem.onEnemyKo(enemy.type);
     this.scene.cameras.main.shake(ENEMY_KO_SHAKE_MS, ENEMY_KO_SHAKE_INTENSITY);
     this.playSE?.('enemyKO');
+  }
+
+  /** KICK FINISH!! ボーナステキスト演出 */
+  private spawnKickFinisherText(x: number, y: number, bonus: number): void {
+    const txt = this.scene.add.text(x, y - 40, `KICK FINISH! +${bonus}`, {
+      fontFamily: 'monospace',
+      fontSize: '22px',
+      color: '#ffdf9a',
+      stroke: '#000000',
+      strokeThickness: 5
+    }).setOrigin(0.5).setDepth(19).setAngle(Phaser.Math.Between(-10, 10));
+
+    this.scene.tweens.add({
+      targets: txt,
+      y: txt.y - 60,
+      scaleX: 1.4,
+      scaleY: 1.4,
+      alpha: 0,
+      duration: 900,
+      ease: 'Power2',
+      onComplete: () => txt.destroy()
+    });
   }
 
   /** K.O.!! 大テキスト演出 */
