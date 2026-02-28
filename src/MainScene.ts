@@ -443,12 +443,14 @@ export class MainScene extends Phaser.Scene {
     if (cursors.left.isDown || moveAxis < -0.2) {
       player.body.setVelocityX(-speed);
       this.facing = -1;
+      player.setFlipX(true);
       return;
     }
 
     if (cursors.right.isDown || moveAxis > 0.2) {
       player.body.setVelocityX(speed);
       this.facing = 1;
+      player.setFlipX(false);
     }
   }
 

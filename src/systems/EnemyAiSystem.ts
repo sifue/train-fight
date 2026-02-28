@@ -20,6 +20,10 @@ export class EnemyAiSystem {
     const dx = player.x - enemy.x;
     if (Math.abs(dx) >= ENEMY_CHASE_RANGE) return 0;
 
-    return Math.sign(dx) * enemy.aggroSpeed();
+    const dir = Math.sign(dx);
+    // 敵がプレイヤー方向を向く
+    enemy.setFlipX(dir < 0);
+
+    return dir * enemy.aggroSpeed();
   }
 }
