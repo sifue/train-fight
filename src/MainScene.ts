@@ -57,6 +57,7 @@ export class MainScene extends Phaser.Scene {
   private xKey?: Phaser.Input.Keyboard.Key;
   private rKey?: Phaser.Input.Keyboard.Key;
   private mKey?: Phaser.Input.Keyboard.Key;
+  private nKey?: Phaser.Input.Keyboard.Key;
 
   private touchMoveAxis = 0;
   private touchJumpQueued = false;
@@ -150,10 +151,18 @@ export class MainScene extends Phaser.Scene {
     return Boolean(this.rKey && this.ended && Phaser.Input.Keyboard.JustDown(this.rKey));
   }
 
+  /** M/N キーで BGM/SE 音量を 0%→50%→100% とサイクル */
   private handleSoundToggle(): void {
-    if (!this.mKey || !Phaser.Input.Keyboard.JustDown(this.mKey)) return;
-    const v = this.audioManager.getBGMVolume();
-    this.audioManager.setBGMVolume(v > 0 ? 0 : 0.25);
+    if (this.mKey && Phaser.Input.Keyboard.JustDown(this.mKey)) {
+      const v = this.audioManager.getBGMVolume();
+      const next = v <= 0 ? 0.25 : v <= 0.25 ? 0.5 : v <= 0.5 ? 1.0 : 0;
+      this.audioManager.setBGMVolume(next);
+    }
+    if (this.nKey && Phaser.Input.Keyboard.JustDown(this.nKey)) {
+      const v = this.audioManager.getSEVolume();
+      const next = v <= 0 ? 0.25 : v <= 0.25 ? 0.5 : v <= 0.5 ? 1.0 : 0;
+      this.audioManager.setSEVolume(next);
+    }
   }
 
   private tickSystems(delta: number): void {
@@ -271,7 +280,9 @@ export class MainScene extends Phaser.Scene {
       stressPercent: this.stressSystem.getStressPercent(),
       stressCritical: this.stressSystem.isCritical(),
       enemiesLeft: this.enemies?.countActive(true) ?? 0,
-      distToGoal
+      distToGoal,
+      bgmVolume: this.audioManager.getBGMVolume(),
+      seVolume: this.audioManager.getSEVolume()
     };
   }
 
@@ -287,6 +298,7 @@ export class MainScene extends Phaser.Scene {
     this.xKey = bindKey(Phaser.Input.Keyboard.KeyCodes.X);
     this.rKey = bindKey(Phaser.Input.Keyboard.KeyCodes.R);
     this.mKey = bindKey(Phaser.Input.Keyboard.KeyCodes.M);
+    this.nKey = bindKey(Phaser.Input.Keyboard.KeyCodes.N);
 
     // 最初のユーザー操作で AudioContext を起動（autoplay ポリシー対応）
     this.input.once('pointerdown', () => {
@@ -374,25 +386,35 @@ export class MainScene extends Phaser.Scene {
     const rLabel = this.add.text(WIDTH - 115, HEIGHT - 10, '攻撃', labelStyle).setOrigin(0.5).setScrollFactor(0).setDepth(31);
     objs.push(lLabel, rLabel);
 
-    // ---- BGMミュートボタン（右上コーナー）----
-    const muteCircle = this.add.circle(WIDTH - 28, 28, 22, 0x0a1a30, 0.55).setScrollFactor(0).setDepth(32);
-    muteCircle.setStrokeStyle(1.5, 0x6aadf0, 0.8);
-    muteCircle.setInteractive();
-    const muteTxt = this.add
-      .text(WIDTH - 28, 28, '♪', { fontFamily: 'monospace', fontSize: '15px', color: '#7ab4ff' })
-      .setOrigin(0.5).setScrollFactor(0).setDepth(33);
-    muteCircle.on('pointerdown', () => {
-      const v = this.audioManager.getBGMVolume();
-      if (v > 0) {
-        this.audioManager.setBGMVolume(0);
-        muteTxt.setText('✗');
-      } else {
-        this.audioManager.setBGMVolume(0.25);
-        muteTxt.setText('♪');
-        if (!this.audioManager.getBGMVolume()) this.audioManager.startBGM();
-      }
-    });
-    objs.push(muteCircle, muteTxt);
+    // ---- サウンドボタン（右上コーナー）----
+    const makeVolBtn = (cx: number, label: string, getLvl: () => number, setLvl: (v: number) => void): void => {
+      const btn = this.add.circle(cx, 28, 22, 0x0a1a30, 0.55).setScrollFactor(0).setDepth(32);
+      btn.setStrokeStyle(1.5, 0x6aadf0, 0.8);
+      btn.setInteractive();
+      const txt = this.add
+        .text(cx, 28, label, { fontFamily: 'monospace', fontSize: '12px', color: '#7ab4ff' })
+        .setOrigin(0.5).setScrollFactor(0).setDepth(33);
+
+      const updateLabel = (): void => {
+        const v = getLvl();
+        const vol = v <= 0 ? '✗' : v <= 0.25 ? '▁' : v <= 0.5 ? '▄' : '█';
+        txt.setText(`${label.charAt(0)}${vol}`);
+      };
+      updateLabel();
+
+      btn.on('pointerdown', () => {
+        const v = getLvl();
+        const next = v <= 0 ? 0.25 : v <= 0.25 ? 0.5 : v <= 0.5 ? 1.0 : 0;
+        setLvl(next);
+        updateLabel();
+      });
+      objs.push(btn, txt);
+    };
+
+    makeVolBtn(WIDTH - 58, 'M♪', () => this.audioManager.getBGMVolume(),
+      v => this.audioManager.setBGMVolume(v));
+    makeVolBtn(WIDTH - 22, 'N🔊', () => this.audioManager.getSEVolume(),
+      v => this.audioManager.setSEVolume(v));
   }
 
   private updatePlayerInput(): void {
