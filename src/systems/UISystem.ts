@@ -80,11 +80,32 @@ export class UISystem {
   }
 
   update(snapshot: UiSnapshot): void {
-    this.comboText?.setText(snapshot.combo > 1 ? `COMBO x${snapshot.combo}` : '');
-    this.scoreText?.setText(`SCORE: ${snapshot.score}`);
-    this.hiScoreText?.setText(`HI-SCORE: ${snapshot.hiScore}`);
-    this.hpText?.setText(`HP: ${Math.max(0, snapshot.hp)}`);
-    this.stressText?.setText(`STRESS: ${snapshot.stressPercent}%${snapshot.stressCritical ? '  !!' : ''}`);
+    // コンボ表示（高コンボで大きく表示）
+    if (snapshot.combo > 1) {
+      const fontSize = snapshot.combo >= 10 ? '28px' : '22px';
+      this.comboText?.setStyle({ ...this.uiStyle('#ffd166'), fontSize });
+      this.comboText?.setText(`★ COMBO x${snapshot.combo}`);
+    } else {
+      this.comboText?.setText('');
+    }
+
+    this.scoreText?.setText(`SCORE: ${snapshot.score.toLocaleString()}`);
+    this.hiScoreText?.setText(`HI: ${snapshot.hiScore.toLocaleString()}`);
+
+    // HP ハート表示（最大5）
+    const maxHp = 5;
+    const hp = Math.max(0, Math.min(maxHp, snapshot.hp));
+    const hearts = '♥'.repeat(hp) + '♡'.repeat(maxHp - hp);
+    this.hpText?.setText(`HP: ${hearts}`);
+
+    // ストレスゲージ（ブロック文字）
+    const blocks = Math.floor(snapshot.stressPercent / 10);
+    const bar = '█'.repeat(blocks) + '░'.repeat(10 - blocks);
+    const stressLabel = snapshot.stressCritical ? '⚠ STRESS' : 'STRESS';
+    const stressColor = snapshot.stressCritical ? '#ff4444' : '#ffcf8a';
+    this.stressText?.setStyle({ ...this.uiStyle('#ffcf8a'), color: stressColor });
+    this.stressText?.setText(`${stressLabel}: ${bar}`);
+
     this.enemyText?.setText(`ENEMY LEFT: ${snapshot.enemiesLeft}`);
     const bgmPct = Math.round(snapshot.bgmVolume * 100);
     const sePct  = Math.round(snapshot.seVolume  * 100);
