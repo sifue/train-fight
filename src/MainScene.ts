@@ -693,14 +693,17 @@ export class MainScene extends Phaser.Scene {
     });
 
     // ボス撃破時のイベントをカスタムで仕掛ける（ボスHPウォッチ）
-    this.time.addEvent({
+    // NOTE: 撃破を検知したら必ず removeEvent で停止すること。
+    //       停止しないと flash() が 500ms ごとに無限発火し続ける。
+    const bossWatcher = this.time.addEvent({
       delay: 500,
       loop: true,
       callback: () => {
         if (boss.hp <= 0 || !boss.active) {
-          sign.destroy();
+          this.time.removeEvent(bossWatcher);   // ← ループ停止（これがないと無限フラッシュ）
+          if (sign.active) sign.destroy();
           if (!this.ended) {
-            // ボス撃破ボーナス演出
+            // ボス撃破ボーナス演出（1回だけ）
             this.cameras.main.flash(250, 255, 220, 80);
             this.scoreSystem.addBonus(500);
           }
