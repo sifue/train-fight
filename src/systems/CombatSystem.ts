@@ -9,6 +9,7 @@ const ATTACK_HITBOX_Y_OFFSET = 20;
 const ATTACK_FORWARD_OFFSET = 24;
 const ATTACK_LUNGE_VELOCITY = 130;
 const HEAVY_CHAIN_WINDOW_MS = 180;
+const HEAVY_WHIFF_EXTRA_RECOVERY_MS = 180;
 const ENEMY_DEFAULT_HIT_STUN_MS = 280;
 const ENEMY_HIT_TINT_RESET_MS = 80;
 const ENEMY_AIR_KNOCKBACK_Y = -120;
@@ -95,6 +96,7 @@ export class CombatSystem {
   private attackLock = 0;
   private attackHitbox?: AttackHitbox;
   private currentAttack?: AttackKind;
+  private attackConnected = false;
   private queuedHeavy?: AttackConfig;
   private queuedHeavyExpiresAt = 0;
   private hitStopToken = 0;
@@ -145,6 +147,7 @@ export class CombatSystem {
     }
 
     this.currentAttack = kind;
+    this.attackConnected = false;
     this.attackLock = now + cfg.active + cfg.recovery;
 
     this.setHitboxEnabled(true);
@@ -159,6 +162,10 @@ export class CombatSystem {
     });
 
     this.scene.time.delayedCall(cfg.active + cfg.recovery, () => {
+      if (kind === 'heavy' && !this.attackConnected) {
+        this.attackLock = Math.max(this.attackLock, this.scene.time.now + HEAVY_WHIFF_EXTRA_RECOVERY_MS);
+      }
+
       const queueAvailable = this.queuedHeavy && this.scene.time.now <= this.queuedHeavyExpiresAt;
       if (!queueAvailable) {
         this.clearQueuedHeavy();
@@ -176,6 +183,7 @@ export class CombatSystem {
     this.setHitboxEnabled(false);
     this.resetHitboxState();
     this.attackLock = 0;
+    this.attackConnected = false;
     this.clearQueuedHeavy();
     this.currentAttack = undefined;
     this.hitStopToken++;
@@ -235,6 +243,7 @@ export class CombatSystem {
 
     if (!this.attackHitbox.active || enemy.hp <= 0 || now < enemy.stunnedUntil) return;
 
+    this.attackConnected = true;
     enemy.hp -= this.attackHitbox.power;
     enemy.stunnedUntil = now + this.attackHitbox.stunMs;
     enemy.body.setVelocityX(this.getFacing() * this.attackHitbox.push);

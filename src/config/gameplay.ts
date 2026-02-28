@@ -12,29 +12,29 @@ export type AttackProfile = {
 };
 
 export const LIGHT_ATTACK: AttackProfile = {
-  power: 7,
-  active: 120,
-  recovery: 60,
-  width: 50,
-  push: 200,
-  stunMs: 190,
+  power: 5,
+  active: 80,
+  recovery: 28,
+  width: 44,
+  push: 160,
+  stunMs: 130,
   hitFlashColor: 0xc8f7ff,
-  hitShakeMs: 45,
-  hitShakeIntensity: 0.0009,
-  hitStopMs: 24
+  hitShakeMs: 26,
+  hitShakeIntensity: 0.0005,
+  hitStopMs: 12
 };
 
 export const HEAVY_ATTACK: AttackProfile = {
-  power: 16,
-  active: 170,
-  recovery: 180,
-  width: 76,
-  push: 360,
-  stunMs: 360,
+  power: 20,
+  active: 190,
+  recovery: 260,
+  width: 96,
+  push: 430,
+  stunMs: 430,
   hitFlashColor: 0xffdf9a,
-  hitShakeMs: 95,
-  hitShakeIntensity: 0.002,
-  hitStopMs: 62
+  hitShakeMs: 130,
+  hitShakeIntensity: 0.0026,
+  hitStopMs: 82
 };
 
 export const PLAYER_MAX_HP = 5;
