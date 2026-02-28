@@ -24,6 +24,8 @@ export function createGameApp(parent = 'game'): Phaser.Game {
     backgroundColor: '#0f1522',
     // pixelArt モードを無効化: スケールアップ時にテキストが滲まないよう antialias を有効化
     antialias: true,
+    // サブピクセル描画を整数座標に丸めて文字滲みを防止
+    roundPixels: true,
     physics: {
       default: 'arcade',
       arcade: { gravity: { x: 0, y: 1500 }, debug: false }

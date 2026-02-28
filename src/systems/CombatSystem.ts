@@ -17,15 +17,13 @@ const ENEMY_DEFAULT_HIT_STUN_MS = 280;
 const ENEMY_HIT_TINT_RESET_MS = 80;
 const ENEMY_AIR_KNOCKBACK_Y = -120;
 const ENEMY_DEATH_STUN_MS = 999999;
-const HEAVY_ENEMY_KO_BONUS_PUSH = 190;
-const NORMAL_ENEMY_KO_BONUS_PUSH = 280;
-const HEAVY_ENEMY_KO_LAUNCH_Y = -300;
-const NORMAL_ENEMY_KO_LAUNCH_Y = -380;
-const ENEMY_KO_SHAKE_MS = 90;
-const ENEMY_KO_SHAKE_INTENSITY = 0.0022;
-const ENEMY_KO_ROTATION_MIN = 35;
-const ENEMY_KO_ROTATION_MAX = 75;
-const ENEMY_KO_FADE_MS = 460;
+const HEAVY_ENEMY_KO_BONUS_PUSH = 500;
+const NORMAL_ENEMY_KO_BONUS_PUSH = 720;
+const HEAVY_ENEMY_KO_LAUNCH_Y = -580;
+const NORMAL_ENEMY_KO_LAUNCH_Y = -750;
+const ENEMY_KO_SHAKE_MS = 200;
+const ENEMY_KO_SHAKE_INTENSITY = 0.007;
+const ENEMY_KO_FADE_MS = 1500;
 const HITBOX_OFFSCREEN_X = -9999;
 
 const ENEMY_KO_PROFILES = {
@@ -352,24 +350,59 @@ export class CombatSystem {
 
     enemy.hp = 0;
     enemy.stunnedUntil = now + ENEMY_DEATH_STUN_MS;
+    // ワールド境界バウンスは維持しつつ、他オブジェクトとの衝突を無効化
     enemy.body.checkCollision.none = true;
+    enemy.body.setBounce(0.85);
 
     const koProfile = ENEMY_KO_PROFILES[enemy.type];
+    const dir = this.getFacing();
 
-    enemy.body.setVelocityX(this.getFacing() * (this.attackHitbox.push + koProfile.pushBonus));
+    enemy.body.setVelocityX(dir * (this.attackHitbox.push + koProfile.pushBonus));
     enemy.body.setVelocityY(koProfile.launchY);
     enemy.setTint(0xfff1b5);
+
+    // 720度スピン → スケール縮小しながらフェード
     this.scene.tweens.add({
       targets: enemy,
-      angle: this.getFacing() * Phaser.Math.Between(ENEMY_KO_ROTATION_MIN, ENEMY_KO_ROTATION_MAX),
+      angle: dir * 720,
+      scaleX: 0,
+      scaleY: 0,
       alpha: 0,
       duration: ENEMY_KO_FADE_MS,
+      ease: 'Power1',
       onComplete: () => enemy.destroy()
     });
+
+    // K.O.!! ポップアップテキスト
+    this.spawnKoText(enemy.x, enemy.y - enemy.height / 2);
 
     this.scoreSystem.onEnemyKo(enemy.koBonus());
     this.stressSystem.onEnemyKo(enemy.type);
     this.scene.cameras.main.shake(ENEMY_KO_SHAKE_MS, ENEMY_KO_SHAKE_INTENSITY);
-    this.playSE?.('enemyDefeat');
+    this.playSE?.('enemyKO');
+  }
+
+  /** K.O.!! 大テキスト演出 */
+  private spawnKoText(x: number, y: number): void {
+    const labels = ['K.O.!!', 'KNOCKOUT!', 'WHAM!!', 'CRASH!!'];
+    const label = labels[Math.floor(Math.random() * labels.length)];
+    const txt = this.scene.add.text(x, y, label, {
+      fontFamily: 'monospace',
+      fontSize: '30px',
+      color: '#ff4444',
+      stroke: '#000000',
+      strokeThickness: 6
+    }).setOrigin(0.5).setDepth(18).setAngle(Phaser.Math.Between(-18, 18));
+
+    this.scene.tweens.add({
+      targets: txt,
+      y: txt.y - 70,
+      scaleX: 1.6,
+      scaleY: 1.6,
+      alpha: 0,
+      duration: 750,
+      ease: 'Power2',
+      onComplete: () => txt.destroy()
+    });
   }
 }

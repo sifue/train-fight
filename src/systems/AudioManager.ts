@@ -13,7 +13,7 @@ export function getAudioManager(): AudioManager {
   return _sharedInstance;
 }
 
-export type SeType = 'lightHit' | 'heavyHit' | 'playerDamage' | 'enemyDefeat' | 'gameOver' | 'victory' | 'uiSelect';
+export type SeType = 'lightHit' | 'heavyHit' | 'playerDamage' | 'enemyDefeat' | 'enemyKO' | 'gameOver' | 'victory' | 'uiSelect';
 
 export class AudioManager {
   private ctx: AudioContext | null = null;
@@ -100,6 +100,16 @@ export class AudioManager {
         this._tone(gain, 'square', 784, 0.12, 0.5, t + 0.16);
         break;
 
+      case 'enemyKO':
+        // 派手なKO音: 重衝撃ノイズ + 低音サウンド + 勝利ジングル
+        this._noiseHit(gain, 0.30, 0.85, t);
+        this._tone(gain, 'sawtooth',  80, 0.28, 0.9, t);
+        this._tone(gain, 'sawtooth', 160, 0.18, 0.7, t + 0.02);
+        this._tone(gain, 'square',   523, 0.10, 0.4, t + 0.18);
+        this._tone(gain, 'square',   784, 0.12, 0.4, t + 0.28);
+        this._tone(gain, 'square',  1047, 0.18, 0.5, t + 0.38);
+        break;
+
       case 'gameOver':
         // ゲームオーバー下降音
         this._tone(gain, 'square', 392, 0.10, 0.5, t);
@@ -135,42 +145,55 @@ export class AudioManager {
     if (this.seMasterGain) this.seMasterGain.gain.value = this.seVolume;
   }
 
-  // ---- BGM スケジューラー ----
+  // ---- BGM スケジューラー（ハードロック調） ----
 
   private _scheduleBGM(): void {
-    const BPM = 148;
-    const beatMs = (60 / BPM) * 1000;
-    // 8ビット風アクションBGMパターン（2小節ループ）
-    const melody = [
-      392, 440, 494, 523,
-      494, 523, 587, 523,
-      494, 440, 392, 349,
-      330, 349, 392, 440
+    const BPM = 168;
+    const stepMs  = Math.round((60 / BPM / 4) * 1000); // 16分音符 ≈ 89ms
+    const stepSec = stepMs / 1000;
+
+    // ---- ドラムパターン (16ステップ繰り返し) ----
+    // キック: 1拍・3拍メイン + シンコペーション
+    const KICK  = [1,0,0,0, 0,0,1,0, 1,0,0,0, 0,1,0,0];
+    // スネア: 2拍・4拍バックビート
+    const SNARE = [0,0,0,0, 1,0,0,0, 0,0,0,0, 1,0,0,0];
+    // ハイハット: 8分音符刻み
+    const HIHAT = [1,0,1,0, 1,0,1,0, 1,0,1,0, 1,0,1,0];
+
+    // ---- ギターリフ (32ステップ = 2小節, Eマイナー) ----
+    // E3=165 D3=147 G3=196 A3=220
+    const GUITAR: number[] = [
+      165, 0, 165, 0,  165, 0, 165, 0,  196, 0, 220, 0,  165, 0, 165, 0,
+      165, 0, 165, 0,  147, 0, 147, 0,  147, 0, 165, 0,  196, 0,   0, 0,
     ];
-    const bass = [
-      196, 0, 196, 0,
-      220, 0, 220, 0,
-      196, 0, 196, 0,
-      175, 0, 196, 0
+    // ---- ベースライン (32ステップ) ----
+    // E2=82 D2=73 G2=98 A2=110
+    const BASS: number[] = [
+      82, 0, 82, 0,   82, 0, 82, 0,   98, 0, 110, 0,   82, 0,  0, 0,
+      82, 0, 82, 0,   73, 0, 73, 0,   73, 0,  82, 0,   98, 0,  0, 0,
     ];
 
     const tick = (): void => {
       if (!this.ctx || !this.bgmMasterGain || !this.bgmPlaying) return;
-      const idx = this.bgmBeat % melody.length;
+      const drumIdx = this.bgmBeat % 16;
+      const riffIdx = this.bgmBeat % 32;
       const t = this.ctx.currentTime;
-      const dur = (beatMs / 1000) * 0.75;
 
-      if (melody[idx] > 0) {
-        this._tone(this.bgmMasterGain, 'square', melody[idx], dur, 0.4, t);
+      if (KICK[drumIdx])  this._kick(this.bgmMasterGain, t);
+      if (SNARE[drumIdx]) this._snare(this.bgmMasterGain, t);
+      if (HIHAT[drumIdx]) this._hihat(this.bgmMasterGain, t);
+
+      if (GUITAR[riffIdx] > 0) {
+        this._powerChord(this.bgmMasterGain, GUITAR[riffIdx], stepSec * 2.8, t);
       }
-      if (bass[idx] > 0) {
-        this._tone(this.bgmMasterGain, 'triangle', bass[idx], (beatMs / 1000) * 1.5, 0.35, t);
+      if (BASS[riffIdx] > 0) {
+        this._tone(this.bgmMasterGain, 'sawtooth', BASS[riffIdx], stepSec * 2.2, 0.55, t);
       }
       this.bgmBeat++;
     };
 
     tick();
-    this.bgmIntervalId = setInterval(tick, beatMs);
+    this.bgmIntervalId = setInterval(tick, stepMs);
   }
 
   // ---- プリミティブ音源ヘルパー ----
@@ -214,5 +237,87 @@ export class AudioManager {
     g.connect(dest);
     src.start(startTime);
     src.stop(startTime + duration + 0.01);
+  }
+
+  // ---- ドラム音源ヘルパー ----
+
+  /** キックドラム: サイン波の急速ピッチダウン */
+  private _kick(dest: AudioNode, t: number): void {
+    if (!this.ctx) return;
+    const osc = this.ctx.createOscillator();
+    const g = this.ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(180, t);
+    osc.frequency.exponentialRampToValueAtTime(44, t + 0.09);
+    g.gain.setValueAtTime(1.4, t);
+    g.gain.exponentialRampToValueAtTime(0.001, t + 0.26);
+    osc.connect(g);
+    g.connect(dest);
+    osc.start(t);
+    osc.stop(t + 0.28);
+  }
+
+  /** スネアドラム: ホワイトノイズ + 三角波トーン */
+  private _snare(dest: AudioNode, t: number): void {
+    if (!this.ctx) return;
+    // ノイズ成分（バシッ）
+    this._noiseHit(dest, 0.14, 0.72, t);
+    // 音程成分（ドン）
+    const osc = this.ctx.createOscillator();
+    const g = this.ctx.createGain();
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(230, t);
+    osc.frequency.exponentialRampToValueAtTime(100, t + 0.08);
+    g.gain.setValueAtTime(0.50, t);
+    g.gain.exponentialRampToValueAtTime(0.001, t + 0.15);
+    osc.connect(g);
+    g.connect(dest);
+    osc.start(t);
+    osc.stop(t + 0.16);
+  }
+
+  /** ハイハット: 高周波フィルタリングしたノイズバースト */
+  private _hihat(dest: AudioNode, t: number): void {
+    if (!this.ctx) return;
+    const bufLen = Math.floor(this.ctx.sampleRate * 0.04);
+    const buf = this.ctx.createBuffer(1, bufLen, this.ctx.sampleRate);
+    const data = buf.getChannelData(0);
+    for (let i = 0; i < bufLen; i++) data[i] = Math.random() * 2 - 1;
+
+    const src = this.ctx.createBufferSource();
+    src.buffer = buf;
+    // 高域のみを通すハイパスフィルター
+    const hpf = this.ctx.createBiquadFilter();
+    hpf.type = 'highpass';
+    hpf.frequency.value = 7500;
+    const g = this.ctx.createGain();
+    g.gain.setValueAtTime(0.20, t);
+    g.gain.exponentialRampToValueAtTime(0.001, t + 0.04);
+    src.connect(hpf);
+    hpf.connect(g);
+    g.connect(dest);
+    src.start(t);
+    src.stop(t + 0.045);
+  }
+
+  /** パワーコード: root + 完全5度のノコギリ波（ハードロックギター風） */
+  private _powerChord(dest: AudioNode, rootFreq: number, duration: number, t: number): void {
+    if (!this.ctx) return;
+    const fifth = rootFreq * 1.498; // 完全5度
+    for (const [freq, detune] of [[rootFreq, -7], [fifth, 7]] as [number, number][]) {
+      const osc = this.ctx.createOscillator();
+      const g = this.ctx.createGain();
+      osc.type = 'sawtooth';
+      osc.frequency.value = freq;
+      osc.detune.value = detune;
+      // アタック → サステイン → リリース
+      g.gain.setValueAtTime(0.001, t);
+      g.gain.linearRampToValueAtTime(0.24, t + 0.012);
+      g.gain.exponentialRampToValueAtTime(0.001, t + duration);
+      osc.connect(g);
+      g.connect(dest);
+      osc.start(t);
+      osc.stop(t + duration + 0.01);
+    }
   }
 }

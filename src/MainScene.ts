@@ -482,12 +482,16 @@ export class MainScene extends Phaser.Scene {
     cursors: Phaser.Types.Input.Keyboard.CursorKeys,
     speed: number
   ): void {
+    // 攻撃アニメーション中はモーション上書きしない（移動速度のみ適用）
+    const currentAnim = player.anims.currentAnim?.key ?? '';
+    const isAttackAnim = currentAnim === 'player_punch' || currentAnim === 'player_kick';
+
     const moveAxis = this.touchMoveAxis;
     if (cursors.left.isDown || moveAxis < -0.2) {
       player.body.setVelocityX(-speed);
       this.facing = -1;
       player.setFlipX(true);
-      player.playAnim('player_walk');
+      if (!isAttackAnim) player.playAnim('player_walk');
       return;
     }
 
@@ -495,12 +499,12 @@ export class MainScene extends Phaser.Scene {
       player.body.setVelocityX(speed);
       this.facing = 1;
       player.setFlipX(false);
-      player.playAnim('player_walk');
+      if (!isAttackAnim) player.playAnim('player_walk');
       return;
     }
 
     // 停止中はアイドルアニメーション
-    player.playAnim('player_idle');
+    if (!isAttackAnim) player.playAnim('player_idle');
   }
 
   private handleJumpInput(player: Player, cursors: Phaser.Types.Input.Keyboard.CursorKeys): void {
@@ -521,6 +525,16 @@ export class MainScene extends Phaser.Scene {
     this[touchFlag] = false;
     if (!pressed) return;
     this.combatSystem?.attack(kind, profile);
+
+    // 攻撃アニメーションを再生し、完了後アイドルに戻す
+    const player = this.player;
+    if (player) {
+      const animKey = kind === 'light' ? 'player_punch' : 'player_kick';
+      player.play(animKey);
+      player.once(`animationcomplete-${animKey}`, () => {
+        player.playAnim('player_idle');
+      });
+    }
   }
 
   private onPlayerHit(enemy: Enemy): void {

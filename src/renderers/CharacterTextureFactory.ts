@@ -23,84 +23,187 @@ export class CharacterTextureFactory {
     this.registerAnimations();
   }
 
-  // ---- プレイヤー: 女子高生風 3フレーム(idle, walkA, walkB) ----
+  // ---- プレイヤー: 萌え系女子高生 5フレーム(idle=0, walkA=1, walkB=2, punch=3, kick=4) ----
   private createPlayerSpritesheet(): void {
-    const W = 30, H = 58, FRAMES = 3;
+    const W = 30, H = 58, FRAMES = 5;
     const c = this.makeMultiFrameCanvas('char_player', W, H, FRAMES);
     const ctx = c.context;
 
     for (let f = 0; f < FRAMES; f++) {
-      this.drawPlayer(ctx, f * W, W, H, f);
+      this.drawPlayer(ctx, f * W, f);
     }
     c.refresh();
     this.addFrames('char_player', W, H, FRAMES);
   }
 
-  private drawPlayer(ctx: CanvasRenderingContext2D, ox: number, _W: number, _H: number, frame: number): void {
-    // セーラー服 (紺)
-    ctx.fillStyle = '#2a4a8a';
-    ctx.fillRect(ox + 4, 18, 22, 28);
+  private drawPlayer(ctx: CanvasRenderingContext2D, ox: number, frame: number): void {
+    // ---- 髪（ダークブラウン・ツインテール風） ----
+    ctx.fillStyle = '#2a1808';
+    ctx.fillRect(ox + 5, 0, 20, 6);   // 頭頂部
+    ctx.fillRect(ox + 4, 4, 22, 4);   // 前髪
+    ctx.fillRect(ox + 4, 4, 3, 12);   // 左サイドロック
+    ctx.fillRect(ox + 23, 4, 3, 12);  // 右サイドロック
+    // 髪ハイライト
+    ctx.fillStyle = '#5a3010';
+    ctx.fillRect(ox + 9, 1, 5, 2);
 
-    // スカート
-    ctx.fillStyle = '#3a5aaa';
-    ctx.fillRect(ox + 3, 38, 24, 14);
+    // ツインテールリボン（ピンク）
+    ctx.fillStyle = '#ff4488';
+    ctx.fillRect(ox + 2, 5, 4, 3);
+    ctx.fillRect(ox + 24, 5, 4, 3);
+    ctx.fillStyle = '#ff88bb';
+    ctx.fillRect(ox + 3, 6, 2, 1);
+    ctx.fillRect(ox + 25, 6, 2, 1);
 
-    // 白カラー
-    ctx.fillStyle = '#e8edf4';
-    ctx.fillRect(ox + 9, 18, 12, 6);
+    // ---- 顔（肌色） ----
+    ctx.fillStyle = '#f7c8a0';
+    ctx.fillRect(ox + 8, 4, 14, 14);
 
-    // 頭（肌色）
-    ctx.fillStyle = '#f5cba7';
-    ctx.fillRect(ox + 8, 5, 14, 13);
+    // ---- 大きな目（萌え系） ----
+    // 左目
+    ctx.fillStyle = '#1a1a2a';           // まつ毛・アウトライン
+    ctx.fillRect(ox + 9, 8, 5, 1);      // 上まつ毛
+    ctx.fillRect(ox + 9, 12, 1, 1);     // 下まつ毛左端
+    ctx.fillRect(ox + 13, 12, 1, 1);    // 下まつ毛右端
+    ctx.fillStyle = '#ddeeff';           // 白目
+    ctx.fillRect(ox + 9, 9, 5, 3);
+    ctx.fillStyle = '#2855aa';           // 虹彩（青）
+    ctx.fillRect(ox + 10, 9, 3, 3);
+    ctx.fillStyle = '#0a0a18';           // 瞳孔
+    ctx.fillRect(ox + 11, 10, 1, 2);
+    ctx.fillStyle = '#ffffff';           // キャッチライト
+    ctx.fillRect(ox + 12, 9, 1, 1);
 
-    // 黒髪
+    // 右目
     ctx.fillStyle = '#1a1a2a';
-    ctx.fillRect(ox + 6, 2, 18, 8);
-    ctx.fillRect(ox + 6, 10, 4, 8);
-    ctx.fillRect(ox + 20, 10, 4, 6);
+    ctx.fillRect(ox + 16, 8, 5, 1);
+    ctx.fillRect(ox + 16, 12, 1, 1);
+    ctx.fillRect(ox + 20, 12, 1, 1);
+    ctx.fillStyle = '#ddeeff';
+    ctx.fillRect(ox + 16, 9, 5, 3);
+    ctx.fillStyle = '#2855aa';
+    ctx.fillRect(ox + 17, 9, 3, 3);
+    ctx.fillStyle = '#0a0a18';
+    ctx.fillRect(ox + 18, 10, 1, 2);
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(ox + 19, 9, 1, 1);
 
-    // 目
-    ctx.fillStyle = '#1a1a1a';
-    ctx.fillRect(ox + 11, 10, 3, 2);
-    ctx.fillRect(ox + 16, 10, 3, 2);
+    // ほっぺ（チーク）
+    ctx.fillStyle = '#ffaaaa';
+    ctx.fillRect(ox + 8, 13, 2, 1);
+    ctx.fillRect(ox + 20, 13, 2, 1);
 
-    // 腕（フレームで振り分け）
-    ctx.fillStyle = '#2a4a8a';
-    if (frame === 1) {
-      ctx.fillRect(ox + 1, 22, 5, 14);
-      ctx.fillRect(ox + 24, 18, 5, 14);
+    // 口（小さなピンク）
+    ctx.fillStyle = '#e8806a';
+    ctx.fillRect(ox + 13, 15, 3, 1);
+
+    // ---- ネック ----
+    ctx.fillStyle = '#f7c8a0';
+    ctx.fillRect(ox + 12, 17, 6, 3);
+
+    // ---- セーラー服上半身（紺） ----
+    ctx.fillStyle = '#1e3a6e';
+    ctx.fillRect(ox + 4, 18, 22, 20);
+
+    // 白セーラーカラー
+    ctx.fillStyle = '#e8edf4';
+    ctx.fillRect(ox + 9, 18, 12, 5);
+    ctx.fillRect(ox + 11, 18, 8, 8);
+
+    // 赤チェストリボン
+    ctx.fillStyle = '#cc1122';
+    ctx.fillRect(ox + 11, 22, 8, 5);
+    ctx.fillStyle = '#ff3344';
+    ctx.fillRect(ox + 13, 23, 4, 3);
+    ctx.fillStyle = '#cc1122';
+    ctx.fillRect(ox + 14, 24, 2, 1);  // 中心ノット
+
+    // ---- スカート（ネイビー・プリーツ） ----
+    ctx.fillStyle = '#1e2e5a';
+    ctx.fillRect(ox + 3, 36, 24, 16);
+    // プリーツライン（やや明るい）
+    ctx.fillStyle = '#2a3e70';
+    ctx.fillRect(ox + 7,  36, 1, 16);
+    ctx.fillRect(ox + 13, 36, 1, 16);
+    ctx.fillRect(ox + 19, 36, 1, 16);
+
+    // ---- 白ソックス ----
+    ctx.fillStyle = '#e8edf4';
+    ctx.fillRect(ox + 7, 52, 6, 4);
+    ctx.fillRect(ox + 17, 52, 6, 4);
+
+    // ---- 腕（フレーム別） ----
+    ctx.fillStyle = '#1e3a6e';
+    if (frame === 0) {
+      // アイドル: 自然に垂らす
+      ctx.fillRect(ox + 1, 20, 4, 16);
+      ctx.fillRect(ox + 25, 20, 4, 16);
+    } else if (frame === 1) {
+      // ウォークA: 左前・右後
+      ctx.fillRect(ox + 0, 18, 4, 16);
+      ctx.fillRect(ox + 26, 22, 4, 14);
     } else if (frame === 2) {
-      ctx.fillRect(ox + 1, 18, 5, 14);
-      ctx.fillRect(ox + 24, 22, 5, 14);
+      // ウォークB: 右前・左後
+      ctx.fillRect(ox + 0, 22, 4, 14);
+      ctx.fillRect(ox + 26, 18, 4, 16);
+    } else if (frame === 3) {
+      // パンチ: 右腕を前方に突き出す
+      ctx.fillRect(ox + 1, 22, 4, 14);   // 左腕（引いた状態）
+      ctx.fillRect(ox + 24, 20, 6, 5);   // 右腕（伸ばした状態）
+      // パンチ拳（肌色）
+      ctx.fillStyle = '#f7c8a0';
+      ctx.fillRect(ox + 26, 18, 4, 5);
     } else {
-      ctx.fillRect(ox + 1, 20, 5, 16);
-      ctx.fillRect(ox + 24, 20, 5, 16);
+      // キック: バランスのため両腕を広げる
+      ctx.fillRect(ox + 0, 18, 4, 16);
+      ctx.fillRect(ox + 26, 18, 4, 16);
     }
 
-    // 脚
-    ctx.fillStyle = '#f5cba7';
-    if (frame === 1) {
-      ctx.fillRect(ox + 5, 50, 6, 8);
-      ctx.fillRect(ox + 17, 53, 7, 5);
+    // ---- 脚（フレーム別） ----
+    ctx.fillStyle = '#f7c8a0';  // 肌（ソックスより上）
+    if (frame === 0) {
+      ctx.fillRect(ox + 7, 50, 6, 4);
+      ctx.fillRect(ox + 17, 50, 6, 4);
+    } else if (frame === 1) {
+      ctx.fillRect(ox + 5, 48, 6, 6);
+      ctx.fillRect(ox + 19, 51, 6, 3);
     } else if (frame === 2) {
-      ctx.fillRect(ox + 6, 53, 7, 5);
-      ctx.fillRect(ox + 19, 50, 6, 8);
+      ctx.fillRect(ox + 5, 51, 6, 3);
+      ctx.fillRect(ox + 19, 48, 6, 6);
+    } else if (frame === 3) {
+      // パンチ: 両足自然立ち
+      ctx.fillRect(ox + 7, 50, 6, 4);
+      ctx.fillRect(ox + 17, 50, 6, 4);
     } else {
-      ctx.fillRect(ox + 7, 52, 6, 6);
-      ctx.fillRect(ox + 17, 52, 6, 6);
+      // キック: 右足を前方上方に蹴り上げ
+      ctx.fillRect(ox + 7, 50, 6, 4);   // 左足（接地）
+      // キック足スカート下から延伸
+      ctx.fillStyle = '#1e2e5a';  // スカートの延長
+      ctx.fillRect(ox + 3, 44, 10, 8);
+      ctx.fillStyle = '#e8edf4';  // 右足ソックス（蹴り足）
+      ctx.fillRect(ox + 20, 40, 6, 4);
+      ctx.fillStyle = '#f7c8a0';
+      ctx.fillRect(ox + 20, 44, 6, 4);
     }
 
-    // 靴
-    ctx.fillStyle = '#2a1a3a';
-    if (frame === 1) {
-      ctx.fillRect(ox + 4,  57, 8, 2);
-      ctx.fillRect(ox + 16, 56, 8, 2);
+    // ---- 靴 ----
+    ctx.fillStyle = '#181020';
+    if (frame === 0) {
+      ctx.fillRect(ox + 6, 55, 8, 3);
+      ctx.fillRect(ox + 16, 55, 8, 3);
+    } else if (frame === 1) {
+      ctx.fillRect(ox + 4, 53, 8, 3);
+      ctx.fillRect(ox + 18, 55, 8, 3);
     } else if (frame === 2) {
-      ctx.fillRect(ox + 5,  56, 8, 2);
-      ctx.fillRect(ox + 18, 57, 8, 2);
+      ctx.fillRect(ox + 4, 55, 8, 3);
+      ctx.fillRect(ox + 18, 53, 8, 3);
+    } else if (frame === 3) {
+      ctx.fillRect(ox + 6, 55, 8, 3);
+      ctx.fillRect(ox + 16, 55, 8, 3);
     } else {
-      ctx.fillRect(ox + 5,  57, 8, 2);
-      ctx.fillRect(ox + 16, 57, 8, 2);
+      // キック: 左足靴のみ（右足は蹴り上げ）
+      ctx.fillRect(ox + 6, 55, 8, 3);
+      ctx.fillRect(ox + 20, 43, 6, 3);  // 蹴り足の靴
     }
   }
 
@@ -259,8 +362,10 @@ export class CharacterTextureFactory {
     const anims = this.scene.anims;
 
     if (!anims.exists('player_idle')) {
-      anims.create({ key: 'player_idle', frames: anims.generateFrameNumbers('char_player', { start: 0, end: 0 }), frameRate: 1, repeat: -1 });
-      anims.create({ key: 'player_walk', frames: anims.generateFrameNumbers('char_player', { start: 1, end: 2 }), frameRate: 8, repeat: -1 });
+      anims.create({ key: 'player_idle',  frames: anims.generateFrameNumbers('char_player', { start: 0, end: 0 }), frameRate: 1, repeat: -1 });
+      anims.create({ key: 'player_walk',  frames: anims.generateFrameNumbers('char_player', { start: 1, end: 2 }), frameRate: 8, repeat: -1 });
+      anims.create({ key: 'player_punch', frames: anims.generateFrameNumbers('char_player', { start: 3, end: 3 }), frameRate: 10, repeat: 0 });
+      anims.create({ key: 'player_kick',  frames: anims.generateFrameNumbers('char_player', { start: 4, end: 4 }), frameRate: 10, repeat: 0 });
     }
 
     for (const type of ['normal', 'rush'] as const) {
