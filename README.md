@@ -1,111 +1,125 @@
 # RUSH BREAKER（満員電車ランページ）
 
-Phaser.js だけで作った、静的ホスティング対応の横スクロール爽快アクションです。
+満員電車のストレスをぶっ飛ばして先頭車両の非常ブレーキを引け！
 
-> コンセプト: 「満員電車ストレスの擬人化をぶっ飛ばし、先頭車両で非常ブレーキを引く」
+Phaser.js + TypeScript で作った横スクロール爽快アクション。ブラウザ完結・スマホ対応。
 
-## プレイ
+---
 
-- 開発サーバー:
+## 遊び方
+
+### PC操作
+
+| キー | アクション |
+|------|-----------|
+| `← →` | 左右移動 |
+| `↑` | ジャンプ |
+| `Z` | 弱攻撃 |
+| `X` | 強攻撃（溜め感あり、隙大） |
+| `M` | BGM音量切替 (0→25→50→100%) |
+| `N` | SE音量切替 |
+| `R` | リトライ（ゲームオーバー後） |
+
+### スマホ操作（横向き推奨）
+
+| ボタン | アクション |
+|--------|-----------|
+| `◀` | 左移動（左下） |
+| `▶` | 右移動（左下） |
+| `↑JUMP` | ジャンプ（左上） |
+| `弱` | 弱攻撃（右下左） |
+| `強` | 強攻撃（右下右） |
+| `M♪` / `N🔊` | BGM/SE音量（右上） |
+
+---
+
+## ゲームルール
+
+1. 車両内の敵（通常/突進/重量 3種類）をかき分けて右へ進む
+2. 攻撃をヒットさせるとスコアとコンボが増加する
+3. 先頭車両（右端の 🚨 エリア）に到達でクリア！
+4. HPが0になるとゲームオーバー
+5. スコアTop5はローカルに記録される
+
+---
+
+## GitHub Pages でのプレイ
+
+公開URLにアクセスするだけでプレイできます。
+
+### ローカルで動かす
 
 ```bash
-cd train-rampage
 npm install
 npm run dev
-# http://localhost:5173/train-fight/
+# http://localhost:5173/ でプレイ
 ```
 
-- 本番ビルド:
+### 本番ビルド
 
 ```bash
-npm run build
-npm run preview
+npm run build   # dist/ に生成
+npm run preview # ビルド済みをローカルで確認
 ```
 
-### ビルド計測メモ（2026-02-27）
+### GitHub Pages へのデプロイ
 
-`npm run build` 実行結果（gzip込み）:
-- `dist/index.html` 0.71 kB（0.55 kB）
-- `dist/assets/index-D_TSuhbA.css` 0.52 kB（0.37 kB）
-- `dist/assets/index-D0f3tAfk.js` 13.87 kB（4.91 kB）
-- `dist/assets/phaser-0RJB29YE.js` 1,478.57 kB（339.68 kB）
+`main` ブランチへ push すると GitHub Actions が自動でデプロイします。
 
-補足:
-- `manualChunks` で Phaser は分離済み
-- `dynamic import` 検証メモ: 現状は `MainScene` 1本構成のため分割余地が小さい。次段で「タイトル/ローディングScene」を分離して初回ロード短縮を再検証する
+1. リポジトリの Settings → Pages を開く
+2. Source: `GitHub Actions` を選択
+3. Push すると `.github/workflows/` の設定が動作し `gh-pages` ブランチへデプロイ
 
-## 操作
+---
 
-- `← →` 移動
-- `↑` ジャンプ
-- `Z` 通常攻撃
-- `X` 強攻撃
-- `C` ダッシュ
-- `Shift` ラン（微加速）
-- `E` 非常ブレーキ（先頭車両で条件を満たすと成功）
+## ファイル構成（主要）
 
-## クリア条件
+```
+src/
+  scenes/
+    TitleScene.ts     # タイトル画面
+    ResultScene.ts    # 結果画面（スコア・ランキング）
+  entities/
+    Player.ts         # プレイヤー
+    Enemy.ts          # 敵（normal/rush/heavy）
+  systems/
+    AudioManager.ts   # BGM・SE（Web Audio API）
+    CombatSystem.ts   # 攻撃・ヒット判定
+    ScoreSystem.ts    # スコア・コンボ
+    StressSystem.ts   # ストレスゲージ
+    UISystem.ts       # HUD表示
+  core/
+    SaveManager.ts    # localStorage（ランキング保存）
+  renderers/
+    CharacterTextureFactory.ts  # ドット絵テクスチャ生成
+    TrainBackgroundRenderer.ts  # 電車内背景
+  MainScene.ts        # メインゲームシーン
+  GameApp.ts          # Phaser初期化
+```
 
-1. 先頭車両（右端）まで進む
-2. 暴走ゲージを 70% 未満に抑える（敵を倒してゲージ上昇を抑制）
-3. `E` で非常ブレーキ
+---
 
-## GitHub Pages 公開手順
+## 技術スタック
 
-1. 新規リポジトリ作成（例: `rush-breaker`）
-2. この `train-rampage/` の中身をルートに push
-3. GitHub Settings → Pages
-   - Source: `Deploy from a branch`
-   - Branch: `main` / `/root`
-4. 数分待つと `https://<account>.github.io/rush-breaker/` で公開
+- **Phaser 3** (v3.88) - ゲームエンジン
+- **TypeScript** - 型安全な開発
+- **Vite** - ビルドツール
+- **Web Audio API** - プロシージャル BGM/SE（外部ファイル不要）
+- **GitHub Actions** - 自動デプロイ
 
-## ボットアカウントに必要な権限（最小）
+---
 
-GitHubの"machine user"（ボット用ユーザー）を作る場合:
+## 機能一覧
 
-### パターンA: Classic Personal Access Token（簡単）
-- `repo`（privateにもpushするなら）
-- publicだけなら `public_repo` だけでも可
-- `workflow`（GitHub Actionsを使うなら）
-
-### パターンB: Fine-grained PAT（推奨）
-対象リポジトリ限定 + 以下権限:
-- Repository permissions
-  - `Contents: Read and write`（pushに必須）
-  - `Metadata: Read`（自動で付与）
-  - `Actions: Read and write`（Actions使うなら）
-  - `Pages: Read and write`（APIでPages制御するなら）
-
-### 運用上の推奨
-- ボットをあなたの個人Org/repoに **Collaborator (Write)** で招待
-- トークン有効期限は短め（30〜90日）
-- 2FA必須
-- トークンはGitHub Secretsで保管
-
-## ファイル構成
-
-- `index.html` ... エントリ
-- `style.css` ... UI/表示
-- `game.js` ... ゲームロジック（Phaser）
-
-## 追加要素
-
-- スコアシステム（HIT/撃破/クリアボーナス）
-- ハイスコア保存（localStorage）
-
-## Phase2 で追加済み
-
-- 敵タイプ追加（通常 / heavy / rush）
-- コンボ表示とコンボ持続タイマー
-- ダッシュ操作（C）
-- 車両感の背景演出強化（吊り革・区画・ドア・広告）
-- 撃破時の吹っ飛び演出を強化
-- 難易度を緩和（HP増加、敵密度と圧を調整）
-
-## 今後の拡張案（Phase3+）
-
-- 本格ドット絵スプライト（Aseprite）
-- 車両ごとの固有ギミック（ドア、押し戻し風）
-- 掴み・投げ・エリア必殺
-- BGMループとSE素材差し替え
-- ステージ2（ホーム→運転席）
+- [x] 横スクロールベルトアクション
+- [x] 3種類の敵（通常 / 突進 / 重量）
+- [x] 弱攻撃・強攻撃（コンボチェーン対応）
+- [x] BGM・効果音（Web Audio API による合成音）
+- [x] BGM/SE 独立音量制御
+- [x] タイトル画面 / ゲームオーバー・クリア結果画面
+- [x] スコアランキング Top5（localStorage 保存）
+- [x] スマホ全画面対応（横向きプレイ推奨）
+- [x] マルチタッチ対応タッチコントロール
+- [x] 進行度バー（先頭車両までの距離表示）
+- [x] 敵HPバー表示
+- [x] ピクセルアート風キャラクター
