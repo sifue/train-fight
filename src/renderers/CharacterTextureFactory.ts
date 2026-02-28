@@ -82,11 +82,9 @@ export class CharacterTextureFactory {
     ctx.fillRect(ox+19,  9,  3,  2);  // キャッチライト
     ctx.fillRect(ox+16, 12,  1,  1);  // サブハイライト
 
-    // ほっぺ・口
+    // ほっぺ（口は描画しない）
     ctx.fillStyle = '#ff9898';
     ctx.fillRect(ox+20, 13,  3,  1);
-    ctx.fillStyle = '#e0826a';
-    ctx.fillRect(ox+21, 15,  3,  1);
 
     // ---- ネック ----
     ctx.fillStyle = '#fce8d0';

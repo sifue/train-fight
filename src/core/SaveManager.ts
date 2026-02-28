@@ -10,7 +10,9 @@ const KEYS = {
 
 export type RankEntry = {
   score: number;
-  date: string; // YYYY-MM-DD
+  date: string;
+  /** クリアタイム（秒）。勝利時のみ設定 */
+  clearTime?: number;
 };
 
 const MAX_RANK = 5;
@@ -42,9 +44,11 @@ export class SaveManager {
 
   /**
    * スコアを追加してランキングを更新する
+   * @param score 今回のスコア
+   * @param clearTime クリアタイム（秒）。勝利時のみ渡す
    * @returns 新しいランキング（最大 MAX_RANK 件）
    */
-  static addScore(score: number): RankEntry[] {
+  static addScore(score: number, clearTime?: number): RankEntry[] {
     const ranking = this.getRanking();
     const now = new Date();
     const m   = String(now.getMonth() + 1).padStart(2, '0');
@@ -52,7 +56,7 @@ export class SaveManager {
     const h   = String(now.getHours()).padStart(2, '0');
     const min = String(now.getMinutes()).padStart(2, '0');
     const today = `${m}/${d} ${h}:${min}`;
-    ranking.push({ score, date: today });
+    ranking.push({ score, date: today, clearTime });
     ranking.sort((a, b) => b.score - a.score);
     const newRanking = ranking.slice(0, MAX_RANK);
     localStorage.setItem(KEYS.RANKING, JSON.stringify(newRanking));

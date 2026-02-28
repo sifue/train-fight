@@ -81,6 +81,7 @@ export class MainScene extends Phaser.Scene {
   private hpBarGfx?: Phaser.GameObjects.Graphics;
   private playerHp = PLAYER_MAX_HP;
   private ended = false;
+  private bgRenderer?: TrainBackgroundRenderer;
 
   constructor() {
     super('MainScene');
@@ -111,7 +112,8 @@ export class MainScene extends Phaser.Scene {
     // キャラクターテクスチャを先に生成
     new CharacterTextureFactory(this).createAll();
 
-    new TrainBackgroundRenderer(this).draw();
+    this.bgRenderer = new TrainBackgroundRenderer(this);
+    this.bgRenderer.draw();
 
     const ground = this.createGround();
     const player = this.createPlayer();
@@ -135,6 +137,9 @@ export class MainScene extends Phaser.Scene {
 
   update(_time: number, delta: number): void {
     if (!this.player || !this.cursors || !this.enemies) return;
+
+    // 窓外景色の自動スクロール（暴走列車の疾走感）
+    this.bgRenderer?.update(delta);
 
     if (this.shouldRestartRun()) {
       this.audioManager.stopBGM();

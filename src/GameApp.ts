@@ -22,23 +22,22 @@ export function createGameApp(parent = 'game'): Phaser.Game {
     width: WIDTH,
     height: HEIGHT,
     backgroundColor: '#0f1522',
-    // pixelArt モードを無効化: スケールアップ時にテキストが滲まないよう antialias を有効化
     antialias: true,
-    // サブピクセル描画を整数座標に丸めて文字滲みを防止
     roundPixels: true,
     physics: {
       default: 'arcade',
       arcade: { gravity: { x: 0, y: 1500 }, debug: false }
     },
     scale: {
-      // 画面サイズに合わせてアスペクト比を維持しながら最大拡大
       mode: Phaser.Scale.FIT,
       autoCenter: Phaser.Scale.CENTER_BOTH,
       width: WIDTH,
       height: HEIGHT,
+      // フルHD表示（1920×1080）でのテキストにじみ防止:
+      // zoom=2 でキャンバスを2倍解像度（1920×1080）で描画し
+      // CSS拡縮を最小化してテキスト・グラフィックをシャープに保つ
+      zoom: 2,
     },
-    // TitleScene → MainScene → ResultScene の順で登録
-    // 最初に起動するシーンは配列の先頭
     scene: [TitleScene, MainScene, ResultScene]
   });
 }

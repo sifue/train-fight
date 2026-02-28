@@ -23,8 +23,8 @@ export class ResultScene extends Phaser.Scene {
   create(data: ResultData): void {
     const { result, score, hiScore, clearTime } = data;
 
-    // スコアをランキングに登録
-    const ranking = SaveManager.addScore(score);
+    // スコアをランキングに登録（勝利時はクリアタイムも保存）
+    const ranking = SaveManager.addScore(score, clearTime);
     const finalHiScore = SaveManager.getHiScore();
 
     this._drawBackground(result);
@@ -161,7 +161,7 @@ export class ResultScene extends Phaser.Scene {
     }
   }
 
-  private _drawRanking(ranking: { score: number; date: string }[], currentScore: number): void {
+  private _drawRanking(ranking: { score: number; date: string; clearTime?: number }[], currentScore: number): void {
     // 右カラム: ランキングパネル（スコアパネルの右隣）
     const panelCX = WIDTH * 3 / 4;     // 720
     const panelY = 165;
@@ -182,9 +182,13 @@ export class ResultScene extends Phaser.Scene {
     ranking.forEach((entry, i) => {
       const isMe = entry.score === currentScore;
       const color = i === 0 ? '#ffd166' : isMe ? '#7ce0ff' : '#c8d8f8';
-      const prefix = i === 0 ? '👑' : `${i + 1}.`;
+      const prefix = i === 0 ? '★' : `${i + 1}.`;
+      // クリアタイムを MM:SS 形式で（なければ --:--）
+      const timeStr = entry.clearTime !== undefined
+        ? `${String(Math.floor(entry.clearTime / 60)).padStart(2, '0')}:${String(entry.clearTime % 60).padStart(2, '0')}`
+        : '--:--';
       this.add.text(panelCX - panelW / 2 + 16, panelY + 32 + i * rowH,
-        `${prefix} ${entry.score.toLocaleString().padStart(8)}  ${entry.date}`,
+        `${prefix} ${entry.score.toLocaleString().padStart(8)}  ${timeStr}  ${entry.date}`,
         { fontFamily: 'monospace', fontSize: '13px', color }
       );
     });
