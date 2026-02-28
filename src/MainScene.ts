@@ -73,6 +73,7 @@ export class MainScene extends Phaser.Scene {
   private uiSystem = new UISystem(this, 'ontouchstart' in window || navigator.maxTouchPoints > 0);
   private combatSystem?: CombatSystem;
   private enemyAiSystem = new EnemyAiSystem();
+  private hpBarGfx?: Phaser.GameObjects.Graphics;
   private playerHp = PLAYER_MAX_HP;
   private ended = false;
 
@@ -117,6 +118,7 @@ export class MainScene extends Phaser.Scene {
     this.setupGoalZone(player);
     this.setupInput();
     this.setupCamera(player);
+    this.hpBarGfx = this.add.graphics().setDepth(15);
     this.uiSystem.create();
   }
 
@@ -139,10 +141,7 @@ export class MainScene extends Phaser.Scene {
 
     this.enemyAiSystem.update(now, this.player, this.enemies, this.ended);
     this.tickSystems(delta);
-
-    if (!this.ended && this.enemies.countActive(true) === 0) {
-      this.endRun('YOU WIN!');
-    }
+    this.drawEnemyHpBars();
 
     this.uiSystem.update(this.buildUiSnapshot());
   }
@@ -513,6 +512,28 @@ export class MainScene extends Phaser.Scene {
     for (const enemyRaw of this.enemies?.getChildren() ?? []) {
       const enemy = enemyRaw as Enemy;
       enemy.body.setVelocityX(0);
+    }
+  }
+
+  private drawEnemyHpBars(): void {
+    if (!this.hpBarGfx) return;
+    this.hpBarGfx.clear();
+    for (const raw of this.enemies?.getChildren() ?? []) {
+      const e = raw as Enemy;
+      if (!e.active || e.hp <= 0 || !e.visible) continue;
+
+      const barW = e.width + 8;
+      const bx = e.x - barW / 2;
+      const by = e.y - e.height - 10;
+      const pct = Math.max(0, e.hp / e.maxHp);
+      const barColor = pct > 0.55 ? 0x44dd44 : pct > 0.28 ? 0xffaa00 : 0xff3333;
+
+      // バー背景
+      this.hpBarGfx.fillStyle(0x222222, 0.75);
+      this.hpBarGfx.fillRect(bx, by, barW, 5);
+      // HP バー
+      this.hpBarGfx.fillStyle(barColor, 0.95);
+      this.hpBarGfx.fillRect(bx, by, barW * pct, 5);
     }
   }
 

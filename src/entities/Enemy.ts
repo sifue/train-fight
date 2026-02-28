@@ -50,6 +50,7 @@ const ENEMY_SPECS: Record<EnemyType, EnemySpec> = {
 
 export class Enemy extends Actor {
   hp: number;
+  readonly maxHp: number;
   readonly type: EnemyType;
 
   constructor(scene: Phaser.Scene, x: number, type: EnemyType) {
@@ -58,6 +59,7 @@ export class Enemy extends Actor {
 
     this.type = type;
     this.hp = spec.hp;
+    this.maxHp = spec.hp;
   }
 
   static randomType(rng = Math.random()): EnemyType {
