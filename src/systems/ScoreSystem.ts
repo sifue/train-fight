@@ -29,6 +29,12 @@ export class ScoreSystem implements ScoreEvents, ScoreReadModel {
     this.score += bonusScore + Math.min(120, this.combo * 4);
   }
 
+  /** ゴールクリアボーナスなど固定値加算 */
+  addBonus(amount: number): void {
+    this.score += amount;
+    this.syncHiScore();
+  }
+
   syncHiScore(): boolean {
     if (this.score <= this.hiScore) return false;
     this.hiScore = this.score;

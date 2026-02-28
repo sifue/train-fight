@@ -65,6 +65,7 @@ export class MainScene extends Phaser.Scene {
   private touchUiObjects: Phaser.GameObjects.GameObject[] = [];
 
   private facing = 1;
+  private goalReached = false;
   private readonly audioManager = getAudioManager();
   private scoreSystem = new ScoreSystem(0);
   private stressSystem = new StressSystem();
@@ -80,6 +81,7 @@ export class MainScene extends Phaser.Scene {
 
   private resetRunState(): void {
     this.ended = false;
+    this.goalReached = false;
     this.playerHp = PLAYER_MAX_HP;
     this.facing = 1;
     this.touchMoveAxis = 0;
@@ -111,6 +113,7 @@ export class MainScene extends Phaser.Scene {
 
     this.player = player;
     this.setupCombatSystem();
+    this.setupGoalZone(player);
     this.setupInput();
     this.setupCamera(player);
     this.uiSystem.create();
@@ -222,7 +225,44 @@ export class MainScene extends Phaser.Scene {
     this.cameras.main.startFollow(player, true, 0.08, 0.08);
   }
 
+  private setupGoalZone(player: Player): void {
+    // ゴールゾーン: 世界の末端（先頭車両エリア）
+    const GOAL_X = WORLD_WIDTH - 220;
+    const GOAL_WIDTH = 220;
+    const goal = this.add.rectangle(
+      GOAL_X + GOAL_WIDTH / 2,
+      HEIGHT / 2,
+      GOAL_WIDTH,
+      HEIGHT,
+      0xffd166,
+      0.05
+    );
+    this.physics.add.existing(goal, true);
+
+    // ゴールアイコン演出
+    this.add.text(GOAL_X + 10, HEIGHT / 2 - 20, '🚨', {
+      fontSize: '32px'
+    });
+
+    // プレイヤーがゴールゾーンに触れたらクリア
+    this.physics.add.overlap(player, goal, () => {
+      if (!this.ended && !this.goalReached) {
+        this.goalReached = true;
+        // ボーナス: 残敵数に応じてスコア加算
+        const left = this.enemies?.countActive(true) ?? 0;
+        const clearBonus = 500 + left * 20;
+        this.scoreSystem.addBonus(clearBonus);
+        this.endRun('YOU WIN!');
+      }
+    });
+  }
+
   private buildUiSnapshot(): UiSnapshot {
+    // ゴールまでの距離（ピクセル→m換算: 1m = 10px）
+    const GOAL_X = WORLD_WIDTH - 220;
+    const distToGoal = this.player
+      ? Math.max(0, Math.ceil((GOAL_X - this.player.x) / 10))
+      : 0;
     return {
       combo: this.scoreSystem.getCombo(),
       score: this.scoreSystem.getScore(),
@@ -230,7 +270,8 @@ export class MainScene extends Phaser.Scene {
       hp: this.playerHp,
       stressPercent: this.stressSystem.getStressPercent(),
       stressCritical: this.stressSystem.isCritical(),
-      enemiesLeft: this.enemies?.countActive(true) ?? 0
+      enemiesLeft: this.enemies?.countActive(true) ?? 0,
+      distToGoal
     };
   }
 

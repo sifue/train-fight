@@ -11,6 +11,8 @@ export type UiSnapshot = {
   stressPercent: number;
   stressCritical: boolean;
   enemiesLeft: number;
+  /** ゴールまでの距離(m換算) */
+  distToGoal: number;
 };
 
 export class UISystem {
@@ -72,8 +74,9 @@ export class UISystem {
     this.hpText?.setText(`HP: ${Math.max(0, snapshot.hp)}`);
     this.stressText?.setText(`STRESS: ${snapshot.stressPercent}%${snapshot.stressCritical ? '  !!' : ''}`);
     this.enemyText?.setText(`ENEMY LEFT: ${snapshot.enemiesLeft}`);
+    const distLabel = snapshot.distToGoal <= 0 ? 'GOAL!' : `先頭まで: ${snapshot.distToGoal}m`;
     this.missionText?.setText(
-      `- [${snapshot.enemiesLeft === 0 ? 'x' : ' '}] 車両内の敵を全滅 (${snapshot.enemiesLeft} left)\n- [${snapshot.hp > 0 ? 'x' : ' '}] HPを残して生還`
+      `- ${distLabel}\n- [${snapshot.hp > 0 ? '✓' : ' '}] HPを残して生還`
     );
   }
 
