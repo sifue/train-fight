@@ -21,7 +21,7 @@ export class StressSystem implements StressEvents, StressReadModel {
   }
 
   onEnemyKo(enemyType: EnemyType): void {
-    const relief = enemyType === 'heavy' ? 10 : enemyType === 'rush' ? 7 : 5;
+    const relief = enemyType === 'boss' ? 20 : enemyType === 'heavy' ? 10 : enemyType === 'rush' ? 7 : 5;
     this.stress = Math.max(0, this.stress - relief);
   }
 

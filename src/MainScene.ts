@@ -244,8 +244,18 @@ export class MainScene extends Phaser.Scene {
   private spawnInitialEnemies(): void {
     let x = ENEMY_SPAWN_START_X;
     const limit = WORLD_WIDTH - ENEMY_SPAWN_END_MARGIN;
+    // 中ボスの出現X座標（ワールドの約半分）
+    const BOSS_X = Math.floor(WORLD_WIDTH / 2);
+    let bossSpawned = false;
 
     while (x < limit) {
+      // 中ボスゾーン到達時に一度だけスポーン
+      if (!bossSpawned && x >= BOSS_X - 200) {
+        this.spawnBoss(BOSS_X);
+        bossSpawned = true;
+        x = BOSS_X + 350; // ボス周辺は敵を配置しない
+        continue;
+      }
       this.spawnEnemy(x);
       x += Phaser.Math.Between(ENEMY_SPAWN_STEP_MIN, ENEMY_SPAWN_STEP_MAX);
     }
@@ -614,6 +624,50 @@ export class MainScene extends Phaser.Scene {
     this.physics.add.existing(enemy);
     this.configureEnemyPhysics(enemy);
     this.enemies.add(enemy);
+  }
+
+  private spawnBoss(x: number): void {
+    if (!this.enemies) return;
+
+    const boss = new Enemy(this, x, 'boss');
+    this.add.existing(boss);
+    this.physics.add.existing(boss);
+    this.configureEnemyPhysics(boss);
+    this.enemies.add(boss);
+
+    // ボス頭上にサイン演出
+    const sign = this.add.text(x, GROUND_Y - 120, '⚡ 強敵 ⚡', {
+      fontFamily: 'monospace',
+      fontSize: '18px',
+      color: '#ff4444',
+      stroke: '#000',
+      strokeThickness: 4
+    }).setOrigin(0.5).setDepth(16).setScrollFactor(1);
+
+    this.tweens.add({
+      targets: sign,
+      y: sign.y - 12,
+      duration: 900,
+      yoyo: true,
+      repeat: -1,
+      ease: 'Sine.easeInOut'
+    });
+
+    // ボス撃破時のイベントをカスタムで仕掛ける（ボスHPウォッチ）
+    this.time.addEvent({
+      delay: 500,
+      loop: true,
+      callback: () => {
+        if (boss.hp <= 0 || !boss.active) {
+          sign.destroy();
+          if (!this.ended) {
+            // ボス撃破ボーナス演出
+            this.cameras.main.flash(250, 255, 220, 80);
+            this.scoreSystem.addBonus(500);
+          }
+        }
+      }
+    });
   }
 
   private configureEnemyPhysics(enemy: Enemy): void {

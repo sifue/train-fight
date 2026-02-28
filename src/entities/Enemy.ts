@@ -2,7 +2,7 @@ import Phaser from 'phaser';
 import { GROUND_Y } from '../constants';
 import { Actor } from './Actor';
 
-export type EnemyType = 'normal' | 'rush' | 'heavy';
+export type EnemyType = 'normal' | 'rush' | 'heavy' | 'boss';
 
 type EnemySpec = {
   /** 当たり判定の幅 */
@@ -43,6 +43,16 @@ const ENEMY_SPECS: Record<EnemyType, EnemySpec> = {
     contactDamage: 2,
     hitScoreBase: 22,
     koBonus: 220
+  },
+  /** 中ボス: 力持ちの車掌 */
+  boss: {
+    w: 44,
+    h: 72,
+    hp: 100,
+    aggroSpeed: 55,
+    contactDamage: 3,
+    hitScoreBase: 50,
+    koBonus: 1000
   }
 };
 

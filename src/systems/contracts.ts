@@ -12,7 +12,7 @@ export interface ScoreReadModel {
 
 export interface StressEvents {
   onPlayerDamaged(damage: number): void;
-  onEnemyKo(enemyType: 'normal' | 'rush' | 'heavy'): void;
+  onEnemyKo(enemyType: 'normal' | 'rush' | 'heavy' | 'boss'): void;
 }
 
 export interface StressReadModel {

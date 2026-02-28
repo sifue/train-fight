@@ -40,6 +40,10 @@ const ENEMY_KO_PROFILES = {
   heavy: {
     pushBonus: HEAVY_ENEMY_KO_BONUS_PUSH,
     launchY: HEAVY_ENEMY_KO_LAUNCH_Y
+  },
+  boss: {
+    pushBonus: HEAVY_ENEMY_KO_BONUS_PUSH,
+    launchY: HEAVY_ENEMY_KO_LAUNCH_Y
   }
 } as const;
 

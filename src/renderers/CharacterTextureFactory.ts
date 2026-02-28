@@ -19,6 +19,7 @@ export class CharacterTextureFactory {
     if (!this.scene.textures.exists('char_normal')) this.createEnemySpritesheet('char_normal', 0xd1d5db, 0xb0b4ba);
     if (!this.scene.textures.exists('char_rush'))   this.createEnemySpritesheet('char_rush',   0x8bb1ff, 0x6080cc);
     if (!this.scene.textures.exists('char_heavy'))  this.createHeavySpritesheet();
+    if (!this.scene.textures.exists('char_boss'))   this.createBossSpritesheet();
     this.registerAnimations();
   }
 
@@ -272,6 +273,103 @@ export class CharacterTextureFactory {
     if (!anims.exists('heavy_walk')) {
       anims.create({ key: 'heavy_idle', frames: anims.generateFrameNumbers('char_heavy', { start: 0, end: 0 }), frameRate: 1, repeat: -1 });
       anims.create({ key: 'heavy_walk', frames: anims.generateFrameNumbers('char_heavy', { start: 0, end: 1 }), frameRate: 4, repeat: -1 });
+    }
+
+    if (!anims.exists('boss_walk')) {
+      anims.create({ key: 'boss_idle', frames: anims.generateFrameNumbers('char_boss', { start: 0, end: 0 }), frameRate: 1, repeat: -1 });
+      anims.create({ key: 'boss_walk', frames: anims.generateFrameNumbers('char_boss', { start: 0, end: 1 }), frameRate: 4, repeat: -1 });
+    }
+  }
+
+  // ---- 中ボス: 怖い車掌（黒服・大柄） ----
+  private createBossSpritesheet(): void {
+    const W = 44, H = 72, FRAMES = 2;
+    const c = this.makeMultiFrameCanvas('char_boss', W, H, FRAMES);
+    const ctx = c.context;
+    for (let f = 0; f < FRAMES; f++) this.drawBoss(ctx, f * W, f);
+    c.refresh();
+    this.addFrames('char_boss', W, H, FRAMES);
+  }
+
+  private drawBoss(ctx: CanvasRenderingContext2D, ox: number, frame: number): void {
+    // 制服上着（黒）
+    ctx.fillStyle = '#1a1a2e';
+    ctx.fillRect(ox + 3, 22, 38, 28);
+
+    // 金ボタン
+    ctx.fillStyle = '#c0a000';
+    ctx.fillRect(ox + 20, 24, 4, 4);
+    ctx.fillRect(ox + 20, 32, 4, 4);
+    ctx.fillRect(ox + 20, 40, 4, 4);
+
+    // 白シャツ（えり）
+    ctx.fillStyle = '#e8edf4';
+    ctx.fillRect(ox + 17, 22, 10, 8);
+
+    // ズボン（濃紺）
+    ctx.fillStyle = '#16213e';
+    ctx.fillRect(ox + 6, 46, 32, 22);
+
+    // 帽子
+    ctx.fillStyle = '#1a1a2e';
+    ctx.fillRect(ox + 6, 3, 32, 8);
+    ctx.fillRect(ox + 4, 9, 36, 4);  // つば
+
+    // 頭（肌色）
+    ctx.fillStyle = '#f0c090';
+    ctx.fillRect(ox + 10, 10, 24, 14);
+
+    // 口ひげ
+    ctx.fillStyle = '#2a1a0a';
+    ctx.fillRect(ox + 15, 19, 14, 3);
+
+    // 目（鋭い）
+    ctx.fillStyle = '#1a1a1a';
+    ctx.fillRect(ox + 13, 14, 4, 3);
+    ctx.fillRect(ox + 27, 14, 4, 3);
+
+    // 眉毛（太い・怒り）
+    ctx.fillStyle = '#2a1a0a';
+    ctx.fillRect(ox + 12, 12, 6, 2);
+    ctx.fillRect(ox + 26, 12, 6, 2);
+
+    // 腕（大きな拳）
+    ctx.fillStyle = '#1a1a2e';
+    if (frame === 0) {
+      ctx.fillRect(ox + 0, 24, 7, 22);
+      ctx.fillRect(ox + 37, 26, 7, 20);
+    } else {
+      ctx.fillRect(ox + 0, 26, 7, 20);
+      ctx.fillRect(ox + 37, 24, 7, 22);
+    }
+    // 拳
+    ctx.fillStyle = '#f0c090';
+    if (frame === 0) {
+      ctx.fillRect(ox + 0,  44, 8, 8);
+      ctx.fillRect(ox + 36, 44, 8, 8);
+    } else {
+      ctx.fillRect(ox + 0,  46, 8, 8);
+      ctx.fillRect(ox + 36, 42, 8, 8);
+    }
+
+    // 脚
+    if (frame === 0) {
+      ctx.fillStyle = '#16213e';
+      ctx.fillRect(ox + 7,  60, 12, 10);
+      ctx.fillRect(ox + 25, 62, 12, 8);
+    } else {
+      ctx.fillRect(ox + 7,  62, 12, 8);
+      ctx.fillRect(ox + 25, 60, 12, 10);
+    }
+
+    // 靴
+    ctx.fillStyle = '#0a0a14';
+    if (frame === 0) {
+      ctx.fillRect(ox + 6,  68, 14, 4);
+      ctx.fillRect(ox + 24, 67, 14, 4);
+    } else {
+      ctx.fillRect(ox + 6,  67, 14, 4);
+      ctx.fillRect(ox + 24, 68, 14, 4);
     }
   }
 
