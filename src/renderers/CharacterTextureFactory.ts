@@ -48,12 +48,12 @@ export class CharacterTextureFactory {
     ctx.fillStyle = '#4a1808';
     ctx.fillRect(ox+ 4,  1,  6,  3);  // ハイライト
 
-    // ---- ツインテールリボン（ホットピンク） ----
-    ctx.fillStyle = '#ff1166';
+    // ---- ツインテールリボン（くすみローズ） ----
+    ctx.fillStyle = '#c45580';
     ctx.fillRect(ox+ 1,  7,  7,  6);
-    ctx.fillStyle = '#ff66aa';
+    ctx.fillStyle = '#d98faa';
     ctx.fillRect(ox+ 2,  8,  5,  4);
-    ctx.fillStyle = '#cc0044';
+    ctx.fillStyle = '#8c3355';
     ctx.fillRect(ox+ 3,  9,  2,  2);  // ノット
 
     // ---- 前髪（右向きに伸びる） ----
@@ -207,10 +207,10 @@ export class CharacterTextureFactory {
 
   // ====================================================================
   // 通常/突進敵: サラリーマン
-  // W=28, H=52, 2フレーム。右向きサイドビュー
+  // W=36, H=60, 2フレーム。右向きサイドビュー
   // ====================================================================
   private createEnemySpritesheet(key: string, coat: number, pants: number): void {
-    const W = 28, H = 52, FRAMES = 2;
+    const W = 36, H = 60, FRAMES = 2;
     const c = this.makeMultiFrameCanvas(key, W, H, FRAMES);
     const ctx = c.context;
     const coatHex  = '#' + coat.toString(16).padStart(6, '0');
@@ -224,86 +224,86 @@ export class CharacterTextureFactory {
     ctx: CanvasRenderingContext2D, ox: number,
     coatHex: string, pantsHex: string, frame: number
   ): void {
-    // 右向きサイドビュー（丸顔でかわいめの困り顔）
+    // 右向きサイドビュー（丸顔でかわいめの困り顔）W=36, H=60
 
     // ---- 頭・髪 ----
     ctx.fillStyle = '#2a1a1a';
-    ctx.fillRect(ox+ 3,  0, 14,  7);  // 頭頂
-    ctx.fillRect(ox+ 2,  4,  5,  8);  // 後ろ髪（左）
+    ctx.fillRect(ox+ 4,  0, 18,  8);  // 頭頂
+    ctx.fillRect(ox+ 2,  5,  6, 10);  // 後ろ髪（左）
     ctx.fillStyle = '#3a2a2a';
-    ctx.fillRect(ox+ 4,  1,  6,  2);  // ハイライト
+    ctx.fillRect(ox+ 5,  1,  8,  2);  // ハイライト
 
     // ---- 顔（丸顔・右向き） ----
     ctx.fillStyle = '#f5d5b0';
-    ctx.fillRect(ox+ 6,  3, 12, 11);  // 顔
-    ctx.fillRect(ox+16,  5,  2,  5);  // 鼻先（右）
-    ctx.fillRect(ox+ 5, 10,  2,  3);  // あご丸み
+    ctx.fillRect(ox+ 7,  4, 16, 13);  // 顔
+    ctx.fillRect(ox+21,  6,  3,  6);  // 鼻先（右）
+    ctx.fillRect(ox+ 6, 12,  3,  4);  // あご丸み
 
     // 眉（困り顔）
     ctx.fillStyle = '#3a2a0a';
-    ctx.fillRect(ox+ 8,  5,  5,  1);
-    ctx.fillRect(ox+ 9,  4,  3,  1);
+    ctx.fillRect(ox+10,  6,  7,  1);
+    ctx.fillRect(ox+11,  5,  4,  1);
 
     // 目（丸くてかわいい）
     ctx.fillStyle = '#1a1a2a';
-    ctx.fillRect(ox+ 9,  7,  3,  3);
+    ctx.fillRect(ox+11,  9,  4,  4);
     ctx.fillStyle = '#2266aa';
-    ctx.fillRect(ox+ 9,  7,  2,  2);  // 虹彩
+    ctx.fillRect(ox+11,  9,  3,  3);  // 虹彩
     ctx.fillStyle = '#ffffff';
-    ctx.fillRect(ox+10,  7,  1,  1);  // ハイライト
+    ctx.fillRect(ox+12,  9,  1,  1);  // ハイライト
 
     // 口（への字）
     ctx.fillStyle = '#c08060';
-    ctx.fillRect(ox+10, 12,  4,  1);
-    ctx.fillRect(ox+ 9, 11,  1,  1);
+    ctx.fillRect(ox+13, 14,  5,  1);
+    ctx.fillRect(ox+12, 13,  2,  1);
 
     // ---- ネック ----
     ctx.fillStyle = '#f5d5b0';
-    ctx.fillRect(ox+10, 14,  4,  3);
+    ctx.fillRect(ox+13, 17,  5,  4);
 
     // ---- スーツ上着 ----
     ctx.fillStyle = coatHex;
-    ctx.fillRect(ox+ 6, 16, 14, 16);  // 上着（横から）
+    ctx.fillRect(ox+ 7, 20, 18, 19);  // 上着（横から）
     // シャツ
     ctx.fillStyle = '#eef4ff';
-    ctx.fillRect(ox+10, 16,  5,  9);
+    ctx.fillRect(ox+12, 20,  7, 11);
     // ネクタイ（赤）
     ctx.fillStyle = '#cc2200';
-    ctx.fillRect(ox+11, 16,  3, 12);
+    ctx.fillRect(ox+14, 20,  4, 15);
     ctx.fillStyle = '#ff4422';
-    ctx.fillRect(ox+12, 20,  1,  4);
+    ctx.fillRect(ox+15, 25,  2,  5);
 
     // ---- 腕（前後交互） ----
     ctx.fillStyle = coatHex;
     if (frame === 0) {
-      ctx.fillRect(ox+ 2, 17,  5, 12);  // 後ろ腕
-      ctx.fillRect(ox+18, 17,  5, 12);  // 前腕
+      ctx.fillRect(ox+ 2, 21,  6, 14);  // 後ろ腕
+      ctx.fillRect(ox+23, 21,  6, 14);  // 前腕
     } else {
-      ctx.fillRect(ox+ 2, 19,  5, 10);  // 後ろ腕（後方）
-      ctx.fillRect(ox+18, 15,  5, 14);  // 前腕（前方）
+      ctx.fillRect(ox+ 2, 23,  6, 12);  // 後ろ腕（後方）
+      ctx.fillRect(ox+23, 18,  6, 17);  // 前腕（前方）
     }
 
     // ---- ズボン ----
     ctx.fillStyle = pantsHex;
-    ctx.fillRect(ox+ 7, 32, 12, 12);
+    ctx.fillRect(ox+ 8, 38, 16, 14);
 
     // ---- 脚（前後交互） ----
     if (frame === 0) {
-      ctx.fillRect(ox+ 7, 44,  5,  5);
-      ctx.fillRect(ox+13, 44,  5,  5);
+      ctx.fillRect(ox+ 8, 52,  7,  5);
+      ctx.fillRect(ox+16, 52,  7,  5);
     } else {
-      ctx.fillRect(ox+ 4, 44,  5,  5);  // 後ろ脚
-      ctx.fillRect(ox+13, 44,  5,  7);  // 前脚（前方）
+      ctx.fillRect(ox+ 4, 52,  7,  5);  // 後ろ脚
+      ctx.fillRect(ox+16, 51,  7,  7);  // 前脚（前方）
     }
 
     // ---- 靴 ----
     ctx.fillStyle = '#2a1a10';
     if (frame === 0) {
-      ctx.fillRect(ox+ 5, 49,  8,  3);
-      ctx.fillRect(ox+11, 49,  8,  3);
+      ctx.fillRect(ox+ 5, 57, 11,  3);
+      ctx.fillRect(ox+14, 57, 11,  3);
     } else {
-      ctx.fillRect(ox+ 2, 49,  8,  3);
-      ctx.fillRect(ox+11, 49,  9,  3);
+      ctx.fillRect(ox+ 1, 57, 11,  3);
+      ctx.fillRect(ox+14, 57, 12,  3);
     }
   }
 

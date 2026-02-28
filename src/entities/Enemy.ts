@@ -18,8 +18,8 @@ type EnemySpec = {
 
 const ENEMY_SPECS: Record<EnemyType, EnemySpec> = {
   normal: {
-    w: 28,
-    h: 52,
+    w: 36,
+    h: 60,
     hp: 18,
     aggroSpeed: 74,
     contactDamage: 1,
@@ -27,8 +27,8 @@ const ENEMY_SPECS: Record<EnemyType, EnemySpec> = {
     koBonus: 110
   },
   rush: {
-    w: 24,
-    h: 48,
+    w: 28,
+    h: 52,
     hp: 14,
     aggroSpeed: 112,
     contactDamage: 1,
