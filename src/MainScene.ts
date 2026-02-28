@@ -24,6 +24,8 @@ import {
   PLAYER_BODY_HEIGHT,
   PLAYER_BODY_WIDTH,
   PLAYER_DASH_DRAIN_PER_SEC,
+  PLAYER_DASH_HIT_DAMAGE_MULTIPLIER,
+  PLAYER_DASH_HIT_KNOCKBACK_MULTIPLIER,
   PLAYER_DASH_RECOVER_PER_SEC,
   PLAYER_DASH_STAMINA_MAX,
   PLAYER_DASH_TURN_SPEED,
@@ -314,12 +316,16 @@ export class MainScene extends Phaser.Scene {
     const now = this.time.now;
     if (now < this.player.invulnUntil) return;
 
-    const damage = enemy.contactDamage();
+    const baseDamage = enemy.contactDamage();
+    const damage = this.dashActive
+      ? Math.ceil(baseDamage * PLAYER_DASH_HIT_DAMAGE_MULTIPLIER)
+      : baseDamage;
     this.playerHp -= damage;
     this.stressSystem.onPlayerDamaged(damage);
     this.player.invulnUntil = now + PLAYER_INVULN_MS;
     this.player.flashDamaged();
-    this.applyPlayerKnockback(enemy);
+    this.dashActive = false;
+    this.applyPlayerKnockback(enemy, this.dashActive);
     this.cameras.main.shake(110, 0.003);
 
     this.time.delayedCall(PLAYER_HIT_TINT_RESET_MS, () => this.player?.active && this.player.resetTint());
@@ -329,11 +335,18 @@ export class MainScene extends Phaser.Scene {
     }
   }
 
-  private applyPlayerKnockback(enemy: Enemy): void {
+  private applyPlayerKnockback(enemy: Enemy, wasDashing: boolean): void {
     if (!this.player) return;
 
-    this.player.body.setVelocityX((this.player.x < enemy.x ? -1 : 1) * PLAYER_KNOCKBACK_X);
-    this.player.body.setVelocityY(PLAYER_KNOCKBACK_Y);
+    const kb = wasDashing
+      ? PLAYER_KNOCKBACK_X * PLAYER_DASH_HIT_KNOCKBACK_MULTIPLIER
+      : PLAYER_KNOCKBACK_X;
+    const kbY = wasDashing
+      ? PLAYER_KNOCKBACK_Y * PLAYER_DASH_HIT_KNOCKBACK_MULTIPLIER
+      : PLAYER_KNOCKBACK_Y;
+
+    this.player.body.setVelocityX((this.player.x < enemy.x ? -1 : 1) * kb);
+    this.player.body.setVelocityY(kbY);
   }
 
   private endRun(message: string): void {
