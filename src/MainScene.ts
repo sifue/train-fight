@@ -69,6 +69,7 @@ export class MainScene extends Phaser.Scene {
 
   private facing = 1;
   private goalReached = false;
+  private goalNearAlertFired = false;
   private readonly audioManager = getAudioManager();
   private scoreSystem = new ScoreSystem(0);
   private stressSystem = new StressSystem();
@@ -86,6 +87,7 @@ export class MainScene extends Phaser.Scene {
   private resetRunState(): void {
     this.ended = false;
     this.goalReached = false;
+    this.goalNearAlertFired = false;
     this.playerHp = PLAYER_MAX_HP;
     this.facing = 1;
     this.touchMoveAxis = 0;
@@ -181,6 +183,30 @@ export class MainScene extends Phaser.Scene {
     if (!this.ended && this.stressSystem.getStressPercent() >= 100) {
       this.cameras.main.flash(300, 255, 80, 80);
       this.endRun('STRESS OVER');
+    }
+
+    // ゴール接近演出（一度だけ）
+    const GOAL_X = WORLD_WIDTH - 220;
+    if (!this.ended && !this.goalNearAlertFired && this.player && this.player.x >= GOAL_X - 500) {
+      this.goalNearAlertFired = true;
+      this.audioManager.playSE('uiSelect');
+      this.cameras.main.flash(120, 255, 220, 80);
+      this.cameras.main.shake(200, 0.004);
+      const alertTxt = this.add.text(WIDTH / 2, HEIGHT / 2 - 60, '⚡ ゴールまであと少し！', {
+        fontFamily: 'monospace',
+        fontSize: '24px',
+        color: '#ffd166',
+        stroke: '#000',
+        strokeThickness: 4
+      }).setOrigin(0.5).setScrollFactor(0).setDepth(25);
+      this.tweens.add({
+        targets: alertTxt,
+        y: alertTxt.y - 30,
+        alpha: 0,
+        duration: 1800,
+        ease: 'Power2',
+        onComplete: () => alertTxt.destroy()
+      });
     }
   }
 
