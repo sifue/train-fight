@@ -8,6 +8,7 @@ import { UISystem, UiSnapshot } from './systems/UISystem';
 import { CombatSystem } from './systems/CombatSystem';
 import { EnemyAiSystem } from './systems/EnemyAiSystem';
 import { TrainBackgroundRenderer } from './renderers/TrainBackgroundRenderer';
+import { AudioManager } from './systems/AudioManager';
 import {
   AttackProfile,
   ENEMY_DRAG_X,
@@ -54,6 +55,7 @@ export class MainScene extends Phaser.Scene {
   private zKey?: Phaser.Input.Keyboard.Key;
   private xKey?: Phaser.Input.Keyboard.Key;
   private rKey?: Phaser.Input.Keyboard.Key;
+  private mKey?: Phaser.Input.Keyboard.Key;
 
   private touchMoveAxis = 0;
   private touchJumpQueued = false;
@@ -63,6 +65,7 @@ export class MainScene extends Phaser.Scene {
   private touchUiObjects: Phaser.GameObjects.GameObject[] = [];
 
   private facing = 1;
+  private readonly audioManager = new AudioManager();
   private scoreSystem = new ScoreSystem(0);
   private stressSystem = new StressSystem();
   private uiSystem = new UISystem(this, 'ontouchstart' in window || navigator.maxTouchPoints > 0);
@@ -117,9 +120,12 @@ export class MainScene extends Phaser.Scene {
     if (!this.player || !this.cursors || !this.enemies) return;
 
     if (this.shouldRestartRun()) {
+      this.audioManager.stopBGM();
       this.scene.restart();
       return;
     }
+
+    this.handleSoundToggle();
 
     const now = this.time.now;
 
@@ -139,6 +145,12 @@ export class MainScene extends Phaser.Scene {
 
   private shouldRestartRun(): boolean {
     return Boolean(this.rKey && this.ended && Phaser.Input.Keyboard.JustDown(this.rKey));
+  }
+
+  private handleSoundToggle(): void {
+    if (!this.mKey || !Phaser.Input.Keyboard.JustDown(this.mKey)) return;
+    const v = this.audioManager.getBGMVolume();
+    this.audioManager.setBGMVolume(v > 0 ? 0 : 0.25);
   }
 
   private tickSystems(delta: number): void {
@@ -199,7 +211,8 @@ export class MainScene extends Phaser.Scene {
       getPlayer: () => this.player,
       getEnemies: () => this.enemies,
       getFacing: () => this.facing,
-      isEnded: () => this.ended
+      isEnded: () => this.ended,
+      playSE: (type) => this.audioManager.playSE(type)
     });
     this.combatSystem.init();
   }
@@ -232,6 +245,17 @@ export class MainScene extends Phaser.Scene {
     this.zKey = bindKey(Phaser.Input.Keyboard.KeyCodes.Z);
     this.xKey = bindKey(Phaser.Input.Keyboard.KeyCodes.X);
     this.rKey = bindKey(Phaser.Input.Keyboard.KeyCodes.R);
+    this.mKey = bindKey(Phaser.Input.Keyboard.KeyCodes.M);
+
+    // 最初のユーザー操作で AudioContext を起動（autoplay ポリシー対応）
+    this.input.once('pointerdown', () => {
+      this.audioManager.init();
+      this.audioManager.startBGM();
+    });
+    this.input.keyboard?.once('keydown', () => {
+      this.audioManager.init();
+      this.audioManager.startBGM();
+    });
 
     if (this.isTouchDevice()) {
       // 5本指同時タッチに対応するため追加ポインタを確保
@@ -308,6 +332,26 @@ export class MainScene extends Phaser.Scene {
     const lLabel = this.add.text(120, HEIGHT - 10, '移動 / ジャンプ', labelStyle).setOrigin(0.5).setScrollFactor(0).setDepth(31);
     const rLabel = this.add.text(WIDTH - 115, HEIGHT - 10, '攻撃', labelStyle).setOrigin(0.5).setScrollFactor(0).setDepth(31);
     objs.push(lLabel, rLabel);
+
+    // ---- BGMミュートボタン（右上コーナー）----
+    const muteCircle = this.add.circle(WIDTH - 28, 28, 22, 0x0a1a30, 0.55).setScrollFactor(0).setDepth(32);
+    muteCircle.setStrokeStyle(1.5, 0x6aadf0, 0.8);
+    muteCircle.setInteractive();
+    const muteTxt = this.add
+      .text(WIDTH - 28, 28, '♪', { fontFamily: 'monospace', fontSize: '15px', color: '#7ab4ff' })
+      .setOrigin(0.5).setScrollFactor(0).setDepth(33);
+    muteCircle.on('pointerdown', () => {
+      const v = this.audioManager.getBGMVolume();
+      if (v > 0) {
+        this.audioManager.setBGMVolume(0);
+        muteTxt.setText('✗');
+      } else {
+        this.audioManager.setBGMVolume(0.25);
+        muteTxt.setText('♪');
+        if (!this.audioManager.getBGMVolume()) this.audioManager.startBGM();
+      }
+    });
+    objs.push(muteCircle, muteTxt);
   }
 
   private updatePlayerInput(): void {
@@ -376,6 +420,8 @@ export class MainScene extends Phaser.Scene {
 
     this.time.delayedCall(PLAYER_HIT_TINT_RESET_MS, () => this.player?.active && this.player.resetTint());
 
+    this.audioManager.playSE('playerDamage');
+
     if (this.playerHp <= 0) {
       this.endRun('GAME OVER');
     }
@@ -395,6 +441,10 @@ export class MainScene extends Phaser.Scene {
     this.combatSystem?.disable();
     this.player.body.setVelocity(0, this.player.body.velocity.y);
     this.stopAllEnemies();
+
+    // ゲーム終了 SE・BGM停止
+    this.audioManager.stopBGM();
+    this.audioManager.playSE(message.includes('WIN') ? 'victory' : 'gameOver');
 
     this.uiSystem.showResult(message);
   }

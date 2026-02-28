@@ -2,6 +2,7 @@ import Phaser from 'phaser';
 import { Enemy } from '../entities/Enemy';
 import { Player } from '../entities/Player';
 import type { ScoreEvents, StressEvents } from './contracts';
+import type { SeType } from './AudioManager';
 
 const ATTACK_HITBOX_HEIGHT = 44;
 const ATTACK_HITBOX_DEFAULT_WIDTH = 52;
@@ -84,6 +85,8 @@ type CombatDeps = {
   getEnemies: () => Phaser.Physics.Arcade.Group | undefined;
   getFacing: () => number;
   isEnded: () => boolean;
+  /** SE再生コールバック（省略可） */
+  playSE?: (type: SeType) => void;
 };
 
 export class CombatSystem {
@@ -102,6 +105,7 @@ export class CombatSystem {
   private queuedHeavy?: AttackConfig;
   private queuedHeavyExpiresAt = 0;
   private hitStopToken = 0;
+  private readonly playSE?: (type: SeType) => void;
 
   constructor(deps: CombatDeps) {
     this.scene = deps.scene;
@@ -111,6 +115,7 @@ export class CombatSystem {
     this.getEnemies = deps.getEnemies;
     this.getFacing = deps.getFacing;
     this.isEnded = deps.isEnded;
+    this.playSE = deps.playSE;
   }
 
   init(): void {
@@ -255,6 +260,9 @@ export class CombatSystem {
     this.scene.cameras.main.shake(this.attackHitbox.hitShakeMs, this.attackHitbox.hitShakeIntensity);
     this.applyHitStop(this.attackHitbox.hitStopMs);
 
+    // SE 再生（軽/強攻撃ヒット）
+    this.playSE?.(this.currentAttack === 'heavy' ? 'heavyHit' : 'lightHit');
+
     this.scoreSystem.onEnemyHit(enemy.hitScoreBase());
 
     if (enemy.hp <= 0) {
@@ -308,5 +316,6 @@ export class CombatSystem {
     this.scoreSystem.onEnemyKo(enemy.koBonus());
     this.stressSystem.onEnemyKo(enemy.type);
     this.scene.cameras.main.shake(ENEMY_KO_SHAKE_MS, ENEMY_KO_SHAKE_INTENSITY);
+    this.playSE?.('enemyDefeat');
   }
 }
