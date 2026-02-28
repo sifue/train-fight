@@ -8,29 +8,33 @@ import { UISystem, UiSnapshot } from './systems/UISystem';
 import { CombatSystem } from './systems/CombatSystem';
 import { EnemyAiSystem } from './systems/EnemyAiSystem';
 import { TrainBackgroundRenderer } from './renderers/TrainBackgroundRenderer';
-
-type AttackProfile = { power: number; active: number; width: number; push: number };
-
-const LIGHT_ATTACK: AttackProfile = { power: 8, active: 140, width: 52, push: 230 };
-const HEAVY_ATTACK: AttackProfile = { power: 14, active: 190, width: 74, push: 320 };
-
-const PLAYER_INVULN_MS = 800;
-const PLAYER_HIT_TINT_RESET_MS = 170;
-const PLAYER_KNOCKBACK_X = 230;
-const PLAYER_KNOCKBACK_Y = -170;
-const PLAYER_WALK_SPEED = 220;
-const PLAYER_RUN_SPEED = 270;
-const PLAYER_JUMP_VELOCITY = -590;
-const PLAYER_MAX_VELOCITY_X = 350;
-const PLAYER_MAX_VELOCITY_Y = 1000;
-const PLAYER_DRAG_X = 1700;
-const ENEMY_SPAWN_START_X = 460;
-const ENEMY_SPAWN_END_MARGIN = 250;
-const ENEMY_SPAWN_STEP_MIN = 190;
-const ENEMY_SPAWN_STEP_MAX = 270;
-const ENEMY_DRAG_X = 900;
-const ENEMY_MAX_VELOCITY_X = 220;
-const ENEMY_MAX_VELOCITY_Y = 1000;
+import {
+  AttackProfile,
+  ENEMY_DRAG_X,
+  ENEMY_MAX_VELOCITY_X,
+  ENEMY_MAX_VELOCITY_Y,
+  ENEMY_SPAWN_END_MARGIN,
+  ENEMY_SPAWN_START_X,
+  ENEMY_SPAWN_STEP_MAX,
+  ENEMY_SPAWN_STEP_MIN,
+  GROUND_HEIGHT,
+  GROUND_OFFSET_Y,
+  HEAVY_ATTACK,
+  LIGHT_ATTACK,
+  PLAYER_BODY_HEIGHT,
+  PLAYER_BODY_WIDTH,
+  PLAYER_DRAG_X,
+  PLAYER_HIT_TINT_RESET_MS,
+  PLAYER_MAX_HP,
+  PLAYER_INVULN_MS,
+  PLAYER_JUMP_VELOCITY,
+  PLAYER_KNOCKBACK_X,
+  PLAYER_KNOCKBACK_Y,
+  PLAYER_MAX_VELOCITY_X,
+  PLAYER_MAX_VELOCITY_Y,
+  PLAYER_RUN_SPEED,
+  PLAYER_WALK_SPEED
+} from './config/gameplay';
 
 /**
  * Main gameplay scene (TS migration in progress)
@@ -58,7 +62,7 @@ export class MainScene extends Phaser.Scene {
   private uiSystem = new UISystem(this);
   private combatSystem?: CombatSystem;
   private enemyAiSystem = new EnemyAiSystem();
-  private playerHp = 5;
+  private playerHp = PLAYER_MAX_HP;
   private ended = false;
 
   constructor() {
@@ -67,7 +71,7 @@ export class MainScene extends Phaser.Scene {
 
   private resetRunState(): void {
     this.ended = false;
-    this.playerHp = 5;
+    this.playerHp = PLAYER_MAX_HP;
     this.facing = 1;
     this.player = undefined;
     this.enemies = undefined;
@@ -140,20 +144,30 @@ export class MainScene extends Phaser.Scene {
   }
 
   private createGround(): Phaser.GameObjects.Rectangle {
-    const ground = this.add.rectangle(WORLD_WIDTH / 2, HEIGHT - 34, WORLD_WIDTH, 68, 0x243248);
+    const ground = this.add.rectangle(
+      WORLD_WIDTH / 2,
+      HEIGHT - GROUND_OFFSET_Y,
+      WORLD_WIDTH,
+      GROUND_HEIGHT,
+      0x243248
+    );
     this.physics.add.existing(ground, true);
     return ground;
   }
 
   private createPlayer(): Player {
-    const player = new Player(this, 110, GROUND_Y - 34);
+    const player = new Player(this, 110, GROUND_Y - GROUND_OFFSET_Y);
     this.add.existing(player);
     this.physics.add.existing(player);
-    player.body.setSize(30, 58);
+    this.configurePlayerPhysics(player);
+    return player;
+  }
+
+  private configurePlayerPhysics(player: Player): void {
+    player.body.setSize(PLAYER_BODY_WIDTH, PLAYER_BODY_HEIGHT);
     player.body.setCollideWorldBounds(true);
     player.body.setDragX(PLAYER_DRAG_X);
     player.body.setMaxVelocity(PLAYER_MAX_VELOCITY_X, PLAYER_MAX_VELOCITY_Y);
-    return player;
   }
 
   private spawnInitialEnemies(): void {
@@ -211,42 +225,49 @@ export class MainScene extends Phaser.Scene {
   }
 
   private updatePlayerInput(): void {
-    if (!this.player || !this.cursors) return;
+    const player = this.player;
+    const cursors = this.cursors;
+    if (!player || !cursors) return;
 
     const speed = this.shiftKey?.isDown ? PLAYER_RUN_SPEED : PLAYER_WALK_SPEED;
 
-    this.updateHorizontalMovement(speed);
-    this.handleJumpInput();
+    this.updateHorizontalMovement(player, cursors, speed);
+    this.handleJumpInput(player, cursors);
 
-    this.handleAttackInput(this.zKey, LIGHT_ATTACK);
-    this.handleAttackInput(this.xKey, HEAVY_ATTACK);
+    this.handleAttackInput(this.zKey, 'light', LIGHT_ATTACK);
+    this.handleAttackInput(this.xKey, 'heavy', HEAVY_ATTACK);
   }
 
-  private updateHorizontalMovement(speed: number): void {
-    if (!this.player || !this.cursors) return;
-
-    if (this.cursors.left.isDown) {
-      this.player.body.setVelocityX(-speed);
+  private updateHorizontalMovement(
+    player: Player,
+    cursors: Phaser.Types.Input.Keyboard.CursorKeys,
+    speed: number
+  ): void {
+    if (cursors.left.isDown) {
+      player.body.setVelocityX(-speed);
       this.facing = -1;
       return;
     }
 
-    if (this.cursors.right.isDown) {
-      this.player.body.setVelocityX(speed);
+    if (cursors.right.isDown) {
+      player.body.setVelocityX(speed);
       this.facing = 1;
     }
   }
 
-  private handleJumpInput(): void {
-    if (!this.player || !this.cursors) return;
-    if (Phaser.Input.Keyboard.JustDown(this.cursors.up) && this.player.body.blocked.down) {
-      this.player.body.setVelocityY(PLAYER_JUMP_VELOCITY);
+  private handleJumpInput(player: Player, cursors: Phaser.Types.Input.Keyboard.CursorKeys): void {
+    if (Phaser.Input.Keyboard.JustDown(cursors.up) && player.body.blocked.down) {
+      player.body.setVelocityY(PLAYER_JUMP_VELOCITY);
     }
   }
 
-  private handleAttackInput(key: Phaser.Input.Keyboard.Key | undefined, profile: AttackProfile): void {
+  private handleAttackInput(
+    key: Phaser.Input.Keyboard.Key | undefined,
+    kind: 'light' | 'heavy',
+    profile: AttackProfile
+  ): void {
     if (!key || !Phaser.Input.Keyboard.JustDown(key)) return;
-    this.combatSystem?.attack(profile);
+    this.combatSystem?.attack(kind, profile);
   }
 
   private onPlayerHit(enemy: Enemy): void {
@@ -301,9 +322,13 @@ export class MainScene extends Phaser.Scene {
     const enemy = new Enemy(this, x, Enemy.randomType());
     this.add.existing(enemy);
     this.physics.add.existing(enemy);
+    this.configureEnemyPhysics(enemy);
+    this.enemies.add(enemy);
+  }
+
+  private configureEnemyPhysics(enemy: Enemy): void {
     enemy.body.setDragX(ENEMY_DRAG_X);
     enemy.body.setMaxVelocity(ENEMY_MAX_VELOCITY_X, ENEMY_MAX_VELOCITY_Y);
     enemy.body.setCollideWorldBounds(true);
-    this.enemies.add(enemy);
   }
 }
