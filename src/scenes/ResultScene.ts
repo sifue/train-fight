@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import { HEIGHT, WIDTH } from '../constants';
+import { SaveManager } from '../core/SaveManager';
 
 export type ResultData = {
   result: 'win' | 'lose';
@@ -19,13 +20,18 @@ export class ResultScene extends Phaser.Scene {
   create(data: ResultData): void {
     const { result, score, hiScore } = data;
 
+    // スコアをランキングに登録
+    const ranking = SaveManager.addScore(score);
+    const finalHiScore = SaveManager.getHiScore();
+
     this._drawBackground(result);
 
     // フェードインで登場
     this.cameras.main.fadeIn(600, 0, 0, 0);
 
     this._drawResultText(result);
-    this._drawScores(score, hiScore);
+    this._drawScores(score, Math.max(hiScore, finalHiScore));
+    this._drawRanking(ranking, score);
     this._drawButtons(result, score, hiScore);
   }
 
@@ -125,6 +131,34 @@ export class ResultScene extends Phaser.Scene {
         ease: 'Sine.easeInOut'
       });
     }
+  }
+
+  private _drawRanking(ranking: { score: number; date: string }[], currentScore: number): void {
+    const panelX = WIDTH / 2 + 120;
+    const panelY = HEIGHT / 2 - 10;
+    const panelW = 220;
+    const panelH = 118;
+
+    // ランキングパネル
+    const bg = this.add.graphics();
+    bg.fillStyle(0x0b1220, 0.75);
+    bg.fillRoundedRect(panelX - panelW / 2, panelY, panelW, panelH, 10);
+    bg.lineStyle(2, 0x6a5aaa, 0.7);
+    bg.strokeRoundedRect(panelX - panelW / 2, panelY, panelW, panelH, 10);
+
+    this.add.text(panelX, panelY + 14, '-- TOP 5 --', {
+      fontFamily: 'monospace', fontSize: '13px', color: '#b8a4ff'
+    }).setOrigin(0.5);
+
+    ranking.forEach((entry, i) => {
+      const isMe = entry.score === currentScore;
+      const color = i === 0 ? '#ffd166' : isMe ? '#7ce0ff' : '#c8d8f8';
+      const prefix = i === 0 ? '👑' : `${i + 1}.`;
+      this.add.text(panelX - panelW / 2 + 12, panelY + 30 + i * 17,
+        `${prefix} ${entry.score.toLocaleString().padStart(7)}  ${entry.date}`,
+        { fontFamily: 'monospace', fontSize: '12px', color }
+      );
+    });
   }
 
   private _drawButtons(result: 'win' | 'lose', score: number, hiScore: number): void {

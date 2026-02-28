@@ -9,6 +9,7 @@ import { CombatSystem } from './systems/CombatSystem';
 import { EnemyAiSystem } from './systems/EnemyAiSystem';
 import { TrainBackgroundRenderer } from './renderers/TrainBackgroundRenderer';
 import { getAudioManager } from './systems/AudioManager';
+import { SaveManager } from './core/SaveManager';
 import {
   AttackProfile,
   ENEMY_DRAG_X,
@@ -97,7 +98,7 @@ export class MainScene extends Phaser.Scene {
   create(): void {
     this.resetRunState();
     this.physics.world.setBounds(0, 0, WORLD_WIDTH, HEIGHT);
-    this.scoreSystem = new ScoreSystem(Number(window.localStorage.getItem('trainFightHiScore') ?? 0));
+    this.scoreSystem = new ScoreSystem(SaveManager.getHiScore());
 
     new TrainBackgroundRenderer(this).draw();
 
@@ -166,7 +167,7 @@ export class MainScene extends Phaser.Scene {
   }
 
   private persistHiScore(): void {
-    window.localStorage.setItem('trainFightHiScore', String(this.scoreSystem.getHiScore()));
+    SaveManager.saveHiScore(this.scoreSystem.getHiScore());
   }
 
   private createGround(): Phaser.GameObjects.Rectangle {
