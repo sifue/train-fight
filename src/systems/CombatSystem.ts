@@ -361,16 +361,23 @@ export class CombatSystem {
     enemy.body.setVelocityY(koProfile.launchY);
     enemy.setTint(0xfff1b5);
 
-    // 720度スピン → スケール縮小しながらフェード
+    // 720度スピン（スケールはそのまま・大きいまま飛んでいく）
     this.scene.tweens.add({
       targets: enemy,
       angle: dir * 720,
-      scaleX: 0,
-      scaleY: 0,
-      alpha: 0,
       duration: ENEMY_KO_FADE_MS,
-      ease: 'Power1',
-      onComplete: () => enemy.destroy()
+      ease: 'Linear'
+    });
+    // 後半60%経過後にフェードアウトして消去（しばらく見えたまま飛ぶ演出）
+    this.scene.time.delayedCall(ENEMY_KO_FADE_MS * 0.6, () => {
+      if (!enemy.active) return;
+      this.scene.tweens.add({
+        targets: enemy,
+        alpha: 0,
+        duration: ENEMY_KO_FADE_MS * 0.4,
+        ease: 'Power2.In',
+        onComplete: () => enemy.destroy()
+      });
     });
 
     // K.O.!! ポップアップテキスト

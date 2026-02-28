@@ -51,19 +51,21 @@ export class UISystem {
     const lineH = this.isTouchDevice ? 20 : 22;
     const startY = this.isTouchDevice ? 16 : 20;
 
-    this.comboText   = this.scene.add.text(24, startY,              '', this.uiStyle('#ffd166', this.isTouchDevice ? '18px' : '20px')).setScrollFactor(0);
-    this.scoreText   = this.scene.add.text(24, startY + lineH,      '', this.uiStyle('#7ce0ff', this.isTouchDevice ? '18px' : '20px')).setScrollFactor(0);
-    this.hiScoreText = this.scene.add.text(24, startY + lineH * 2,  '', this.uiStyle('#9dff9d', this.isTouchDevice ? '18px' : '20px')).setScrollFactor(0);
-    this.hpText      = this.scene.add.text(24, startY + lineH * 3,  '', this.uiStyle('#ff9f9f', this.isTouchDevice ? '18px' : '20px')).setScrollFactor(0);
-    this.stressText  = this.scene.add.text(24, startY + lineH * 4,  '', this.uiStyle('#ffcf8a', this.isTouchDevice ? '18px' : '20px')).setScrollFactor(0);
-    this.enemyText   = this.scene.add.text(24, startY + lineH * 5,  '', this.uiStyle('#ffd6a5', this.isTouchDevice ? '18px' : '20px')).setScrollFactor(0);
+    // テキストのdepthをHUDパネル(5)より高く設定してパネルに隠れないようにする
+    const D = 7;
+    this.comboText   = this.scene.add.text(24, startY,              '', this.uiStyle('#ffd166', this.isTouchDevice ? '18px' : '20px')).setScrollFactor(0).setDepth(D);
+    this.scoreText   = this.scene.add.text(24, startY + lineH,      '', this.uiStyle('#7ce0ff', this.isTouchDevice ? '18px' : '20px')).setScrollFactor(0).setDepth(D);
+    this.hiScoreText = this.scene.add.text(24, startY + lineH * 2,  '', this.uiStyle('#9dff9d', this.isTouchDevice ? '18px' : '20px')).setScrollFactor(0).setDepth(D);
+    this.hpText      = this.scene.add.text(24, startY + lineH * 3,  '', this.uiStyle('#ff9f9f', this.isTouchDevice ? '18px' : '20px')).setScrollFactor(0).setDepth(D);
+    this.stressText  = this.scene.add.text(24, startY + lineH * 4,  '', this.uiStyle('#ffcf8a', this.isTouchDevice ? '18px' : '20px')).setScrollFactor(0).setDepth(D);
+    this.enemyText   = this.scene.add.text(24, startY + lineH * 5,  '', this.uiStyle('#ffd6a5', this.isTouchDevice ? '18px' : '20px')).setScrollFactor(0).setDepth(D);
 
     if (!this.isTouchDevice) {
       // PCのみ音量・操作ヒントを表示（タッチデバイスは画面ボタンで代替）
-      this.soundText = this.scene.add.text(24, startY + lineH * 6, '', { ...this.uiStyle('#d7e3ff', '16px'), fontSize: '16px' }).setScrollFactor(0);
+      this.soundText = this.scene.add.text(24, startY + lineH * 6, '', { ...this.uiStyle('#d7e3ff', '16px'), fontSize: '16px' }).setScrollFactor(0).setDepth(D);
       this.scene.add
         .text(24, startY + lineH * 7, '←→: 移動 / ↑: ジャンプ / Z: 弱 / X: 強 / M: BGM / N: SE', { ...this.uiStyle('#d7e3ff', '16px'), fontSize: '16px' })
-        .setScrollFactor(0);
+        .setScrollFactor(0).setDepth(D);
     }
     this.resultText = this.scene.add
       .text(WIDTH / 2, HEIGHT / 2 - 24, '', {

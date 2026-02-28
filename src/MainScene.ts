@@ -71,6 +71,7 @@ export class MainScene extends Phaser.Scene {
   private facing = 1;
   private goalReached = false;
   private goalNearAlertFired = false;
+  private startTime = 0;
   private readonly audioManager = getAudioManager();
   private scoreSystem = new ScoreSystem(0);
   private stressSystem = new StressSystem();
@@ -89,6 +90,7 @@ export class MainScene extends Phaser.Scene {
     this.ended = false;
     this.goalReached = false;
     this.goalNearAlertFired = false;
+    this.startTime = 0;
     this.playerHp = PLAYER_MAX_HP;
     this.facing = 1;
     this.touchMoveAxis = 0;
@@ -128,6 +130,7 @@ export class MainScene extends Phaser.Scene {
     this.setupCamera(player);
     this.hpBarGfx = this.add.graphics().setDepth(15);
     this.uiSystem.create();
+    this.startTime = this.time.now;
   }
 
   update(_time: number, delta: number): void {
@@ -583,6 +586,14 @@ export class MainScene extends Phaser.Scene {
     // Hi-Score を確定保存
     if (this.scoreSystem.syncHiScore()) this.persistHiScore();
 
+    // クリアタイム計測・タイムボーナス加算（勝利時のみ）
+    const elapsedSec = Math.floor((this.time.now - this.startTime) / 1000);
+    if (isWin) {
+      // 基準200秒: 早いほど高ボーナス（最大4000pt、200秒超は0）
+      const timeBonus = Math.max(0, Math.floor(4000 - elapsedSec * 20));
+      if (timeBonus > 0) this.scoreSystem.addBonus(timeBonus);
+    }
+
     // ResultScene へ遷移（演出後）
     const delay = isWin ? 1800 : 1200;
     this.time.delayedCall(delay, () => {
@@ -593,7 +604,8 @@ export class MainScene extends Phaser.Scene {
       this.scene.start('ResultScene', {
         result: resultKind,
         score: this.scoreSystem.getScore(),
-        hiScore: this.scoreSystem.getHiScore()
+        hiScore: this.scoreSystem.getHiScore(),
+        clearTime: isWin ? elapsedSec : undefined
       });
     });
 

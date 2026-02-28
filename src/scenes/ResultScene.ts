@@ -7,6 +7,8 @@ export type ResultData = {
   result: 'win' | 'lose' | 'stress';
   score: number;
   hiScore: number;
+  /** クリアタイム（秒）。勝利時のみ設定 */
+  clearTime?: number;
 };
 
 /**
@@ -19,7 +21,7 @@ export class ResultScene extends Phaser.Scene {
   }
 
   create(data: ResultData): void {
-    const { result, score, hiScore } = data;
+    const { result, score, hiScore, clearTime } = data;
 
     // スコアをランキングに登録
     const ranking = SaveManager.addScore(score);
@@ -31,7 +33,7 @@ export class ResultScene extends Phaser.Scene {
     this.cameras.main.fadeIn(600, 0, 0, 0);
 
     this._drawResultText(result);
-    this._drawScores(score, Math.max(hiScore, finalHiScore));
+    this._drawScores(score, Math.max(hiScore, finalHiScore), clearTime);
     this._drawRanking(ranking, score);
     this._drawButtons(result, score, hiScore);
   }
@@ -95,14 +97,15 @@ export class ResultScene extends Phaser.Scene {
     });
   }
 
-  private _drawScores(score: number, hiScore: number): void {
+  private _drawScores(score: number, hiScore: number, clearTime?: number): void {
     const isNewRecord = score >= hiScore && score > 0;
+    const showTime = clearTime !== undefined;
 
     // 左カラム: スコアパネル（ランキングパネルと横並び）
     const panelX = WIDTH / 4;          // 240
     const panelY = 165;
     const panelW = WIDTH / 2 - 30;     // 450
-    const panelH = 120;
+    const panelH = showTime ? 140 : 120;
 
     const scorePanelBg = this.add.graphics();
     scorePanelBg.fillStyle(0x0b1220, 0.75);
@@ -114,7 +117,7 @@ export class ResultScene extends Phaser.Scene {
       fontFamily: 'monospace', fontSize: '13px', color: '#7ca4cc'
     }).setOrigin(0.5);
 
-    this.add.text(panelX, panelY + 44, `SCORE: ${score.toLocaleString()}`, {
+    this.add.text(panelX, panelY + 42, `SCORE: ${score.toLocaleString()}`, {
       fontFamily: 'monospace',
       fontSize: '28px',
       color: '#7ce0ff',
@@ -124,7 +127,7 @@ export class ResultScene extends Phaser.Scene {
 
     const hiScoreLabel = isNewRecord ? '★ NEW HI-SCORE! ★' : `HI-SCORE: ${hiScore.toLocaleString()}`;
     const hiColor = isNewRecord ? '#ffd166' : '#9dff9d';
-    const newRecord = this.add.text(panelX, panelY + 86, hiScoreLabel, {
+    const newRecord = this.add.text(panelX, panelY + 76, hiScoreLabel, {
       fontFamily: 'monospace',
       fontSize: isNewRecord ? '20px' : '18px',
       color: hiColor,
@@ -142,6 +145,19 @@ export class ResultScene extends Phaser.Scene {
         repeat: -1,
         ease: 'Sine.easeInOut'
       });
+    }
+
+    // クリアタイム表示（勝利時のみ）
+    if (showTime) {
+      const mins = String(Math.floor(clearTime! / 60)).padStart(2, '0');
+      const secs = String(clearTime! % 60).padStart(2, '0');
+      this.add.text(panelX, panelY + 110, `⏱ CLEAR TIME: ${mins}:${secs}`, {
+        fontFamily: 'monospace',
+        fontSize: '16px',
+        color: '#ffd6a5',
+        stroke: '#000000',
+        strokeThickness: 2
+      }).setOrigin(0.5);
     }
   }
 

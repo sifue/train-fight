@@ -24,8 +24,9 @@ export class CharacterTextureFactory {
   }
 
   // ---- プレイヤー: 萌え系女子高生 5フレーム(idle=0, walkA=1, walkB=2, punch=3, kick=4) ----
+  // W=36, H=64 で解像度アップ → 大きな目・ミニスカ・ニーハイソックスを表現
   private createPlayerSpritesheet(): void {
-    const W = 30, H = 58, FRAMES = 5;
+    const W = 36, H = 64, FRAMES = 5;
     const c = this.makeMultiFrameCanvas('char_player', W, H, FRAMES);
     const ctx = c.context;
 
@@ -37,173 +38,192 @@ export class CharacterTextureFactory {
   }
 
   private drawPlayer(ctx: CanvasRenderingContext2D, ox: number, frame: number): void {
-    // ---- 髪（ダークブラウン・ツインテール風） ----
-    ctx.fillStyle = '#2a1808';
-    ctx.fillRect(ox + 5, 0, 20, 6);   // 頭頂部
-    ctx.fillRect(ox + 4, 4, 22, 4);   // 前髪
-    ctx.fillRect(ox + 4, 4, 3, 12);   // 左サイドロック
-    ctx.fillRect(ox + 23, 4, 3, 12);  // 右サイドロック
+    // ---- 後ろ髪（ダークブラウン） ----
+    ctx.fillStyle = '#200c04';
+    ctx.fillRect(ox + 6,  0, 24, 7);   // 頭頂部
+    ctx.fillRect(ox + 4,  3,  4, 15);  // 左ツインテール
+    ctx.fillRect(ox + 28, 3,  4, 15);  // 右ツインテール
     // 髪ハイライト
-    ctx.fillStyle = '#5a3010';
-    ctx.fillRect(ox + 9, 1, 5, 2);
-
-    // ツインテールリボン（ピンク）
-    ctx.fillStyle = '#ff4488';
-    ctx.fillRect(ox + 2, 5, 4, 3);
-    ctx.fillRect(ox + 24, 5, 4, 3);
-    ctx.fillStyle = '#ff88bb';
-    ctx.fillRect(ox + 3, 6, 2, 1);
-    ctx.fillRect(ox + 25, 6, 2, 1);
+    ctx.fillStyle = '#4a2010';
+    ctx.fillRect(ox + 10, 1,  8, 2);
 
     // ---- 顔（肌色） ----
-    ctx.fillStyle = '#f7c8a0';
-    ctx.fillRect(ox + 8, 4, 14, 14);
+    ctx.fillStyle = '#fce8d0';
+    ctx.fillRect(ox + 9, 4, 18, 14);
 
-    // ---- 大きな目（萌え系） ----
-    // 左目
-    ctx.fillStyle = '#1a1a2a';           // まつ毛・アウトライン
-    ctx.fillRect(ox + 9, 8, 5, 1);      // 上まつ毛
-    ctx.fillRect(ox + 9, 12, 1, 1);     // 下まつ毛左端
-    ctx.fillRect(ox + 13, 12, 1, 1);    // 下まつ毛右端
-    ctx.fillStyle = '#ddeeff';           // 白目
-    ctx.fillRect(ox + 9, 9, 5, 3);
-    ctx.fillStyle = '#2855aa';           // 虹彩（青）
-    ctx.fillRect(ox + 10, 9, 3, 3);
-    ctx.fillStyle = '#0a0a18';           // 瞳孔
-    ctx.fillRect(ox + 11, 10, 1, 2);
-    ctx.fillStyle = '#ffffff';           // キャッチライト
-    ctx.fillRect(ox + 12, 9, 1, 1);
+    // ---- 前髪（顔の上に被さる） ----
+    ctx.fillStyle = '#200c04';
+    ctx.fillRect(ox + 8, 4, 20, 5);    // 前髪全体
+    // 前髪の隙間（目が見えるように）
+    ctx.fillStyle = '#fce8d0';
+    ctx.fillRect(ox + 11, 6, 14, 3);
 
-    // 右目
-    ctx.fillStyle = '#1a1a2a';
-    ctx.fillRect(ox + 16, 8, 5, 1);
-    ctx.fillRect(ox + 16, 12, 1, 1);
-    ctx.fillRect(ox + 20, 12, 1, 1);
-    ctx.fillStyle = '#ddeeff';
-    ctx.fillRect(ox + 16, 9, 5, 3);
-    ctx.fillStyle = '#2855aa';
-    ctx.fillRect(ox + 17, 9, 3, 3);
-    ctx.fillStyle = '#0a0a18';
-    ctx.fillRect(ox + 18, 10, 1, 2);
+    // ---- 左目（大きな萌え目・7px幅） ----
+    ctx.fillStyle = '#160820';          // 上まつ毛
+    ctx.fillRect(ox + 10, 8,  7, 1);
+    ctx.fillRect(ox + 10, 13, 1, 1);   // 下まつ毛左
+    ctx.fillRect(ox + 16, 13, 1, 1);   // 下まつ毛右
+    ctx.fillStyle = '#eaf4ff';          // 白目
+    ctx.fillRect(ox + 10, 9,  7, 4);
+    ctx.fillStyle = '#2266dd';          // 虹彩（ビビッドブルー）
+    ctx.fillRect(ox + 11, 9,  5, 4);
+    ctx.fillStyle = '#08061a';          // 瞳孔
+    ctx.fillRect(ox + 12, 9,  3, 4);
+    ctx.fillStyle = '#ffffff';          // キャッチライト（大きめ）
+    ctx.fillRect(ox + 13, 9,  3, 2);
+    ctx.fillRect(ox + 11, 12, 1, 1);   // サブハイライト
+
+    // ---- 右目 ----
+    ctx.fillStyle = '#160820';
+    ctx.fillRect(ox + 19, 8,  7, 1);
+    ctx.fillRect(ox + 19, 13, 1, 1);
+    ctx.fillRect(ox + 25, 13, 1, 1);
+    ctx.fillStyle = '#eaf4ff';
+    ctx.fillRect(ox + 19, 9,  7, 4);
+    ctx.fillStyle = '#2266dd';
+    ctx.fillRect(ox + 20, 9,  5, 4);
+    ctx.fillStyle = '#08061a';
+    ctx.fillRect(ox + 21, 9,  3, 4);
     ctx.fillStyle = '#ffffff';
-    ctx.fillRect(ox + 19, 9, 1, 1);
+    ctx.fillRect(ox + 22, 9,  3, 2);
+    ctx.fillRect(ox + 20, 12, 1, 1);
 
-    // ほっぺ（チーク）
-    ctx.fillStyle = '#ffaaaa';
-    ctx.fillRect(ox + 8, 13, 2, 1);
-    ctx.fillRect(ox + 20, 13, 2, 1);
+    // ---- ほっぺ（チーク：大きめ） ----
+    ctx.fillStyle = '#ff9898';
+    ctx.fillRect(ox + 9,  13, 3, 1);
+    ctx.fillRect(ox + 24, 13, 3, 1);
 
-    // 口（小さなピンク）
-    ctx.fillStyle = '#e8806a';
-    ctx.fillRect(ox + 13, 15, 3, 1);
+    // ---- 口（小さなピンク） ----
+    ctx.fillStyle = '#e0826a';
+    ctx.fillRect(ox + 16, 16, 4, 1);
+
+    // ---- ツインテールリボン（ホットピンク） ----
+    ctx.fillStyle = '#ff1166';
+    ctx.fillRect(ox + 2, 4, 6, 5);    // 左リボン
+    ctx.fillRect(ox + 28, 4, 6, 5);   // 右リボン
+    ctx.fillStyle = '#ff66aa';         // リボンハイライト
+    ctx.fillRect(ox + 3, 5, 4, 3);
+    ctx.fillRect(ox + 29, 5, 4, 3);
+    ctx.fillStyle = '#cc0044';         // リボン中心ノット
+    ctx.fillRect(ox + 4, 6, 2, 2);
+    ctx.fillRect(ox + 30, 6, 2, 2);
 
     // ---- ネック ----
-    ctx.fillStyle = '#f7c8a0';
-    ctx.fillRect(ox + 12, 17, 6, 3);
+    ctx.fillStyle = '#fce8d0';
+    ctx.fillRect(ox + 15, 18, 6, 3);
 
-    // ---- セーラー服上半身（紺） ----
-    ctx.fillStyle = '#1e3a6e';
-    ctx.fillRect(ox + 4, 18, 22, 20);
+    // ---- セーラー服上半身（ネイビー） ----
+    ctx.fillStyle = '#1e3672';
+    ctx.fillRect(ox + 8, 20, 20, 17);  // ボディ y=20-36
 
     // 白セーラーカラー
-    ctx.fillStyle = '#e8edf4';
-    ctx.fillRect(ox + 9, 18, 12, 5);
-    ctx.fillRect(ox + 11, 18, 8, 8);
+    ctx.fillStyle = '#e8f4ff';
+    ctx.fillRect(ox + 14, 20, 8, 5);
+    ctx.fillRect(ox + 16, 20, 4, 8);
 
-    // 赤チェストリボン
+    // 赤スカーフリボン（胸元）
     ctx.fillStyle = '#cc1122';
-    ctx.fillRect(ox + 11, 22, 8, 5);
+    ctx.fillRect(ox + 13, 25, 10, 6);
+    ctx.fillRect(ox + 12, 26, 3, 4);   // 左ハネ
+    ctx.fillRect(ox + 21, 26, 3, 4);   // 右ハネ
     ctx.fillStyle = '#ff3344';
-    ctx.fillRect(ox + 13, 23, 4, 3);
-    ctx.fillStyle = '#cc1122';
-    ctx.fillRect(ox + 14, 24, 2, 1);  // 中心ノット
+    ctx.fillRect(ox + 15, 27, 6, 3);
+    ctx.fillStyle = '#aa0011';
+    ctx.fillRect(ox + 17, 28, 2, 1);
 
-    // ---- スカート（ネイビー・プリーツ） ----
-    ctx.fillStyle = '#1e2e5a';
-    ctx.fillRect(ox + 3, 36, 24, 16);
-    // プリーツライン（やや明るい）
-    ctx.fillStyle = '#2a3e70';
-    ctx.fillRect(ox + 7,  36, 1, 16);
-    ctx.fillRect(ox + 13, 36, 1, 16);
-    ctx.fillRect(ox + 19, 36, 1, 16);
-
-    // ---- 白ソックス ----
-    ctx.fillStyle = '#e8edf4';
-    ctx.fillRect(ox + 7, 52, 6, 4);
-    ctx.fillRect(ox + 17, 52, 6, 4);
+    // ---- ミニスカート（たった7px！） ----
+    ctx.fillStyle = '#1a2a5a';
+    ctx.fillRect(ox + 7, 37, 22, 7);
+    ctx.fillStyle = '#243470';         // プリーツライン
+    ctx.fillRect(ox + 12, 37, 1, 7);
+    ctx.fillRect(ox + 18, 37, 1, 7);
+    ctx.fillRect(ox + 24, 37, 1, 7);
 
     // ---- 腕（フレーム別） ----
-    ctx.fillStyle = '#1e3a6e';
+    ctx.fillStyle = '#1e3672';
     if (frame === 0) {
-      // アイドル: 自然に垂らす
-      ctx.fillRect(ox + 1, 20, 4, 16);
-      ctx.fillRect(ox + 25, 20, 4, 16);
+      ctx.fillRect(ox + 3,  22, 6, 15);
+      ctx.fillRect(ox + 27, 22, 6, 15);
     } else if (frame === 1) {
-      // ウォークA: 左前・右後
-      ctx.fillRect(ox + 0, 18, 4, 16);
-      ctx.fillRect(ox + 26, 22, 4, 14);
+      ctx.fillRect(ox + 2,  20, 6, 14);   // 左腕前
+      ctx.fillRect(ox + 28, 24, 6, 14);   // 右腕後
     } else if (frame === 2) {
-      // ウォークB: 右前・左後
-      ctx.fillRect(ox + 0, 22, 4, 14);
-      ctx.fillRect(ox + 26, 18, 4, 16);
+      ctx.fillRect(ox + 2,  24, 6, 14);   // 左腕後
+      ctx.fillRect(ox + 28, 20, 6, 14);   // 右腕前
     } else if (frame === 3) {
-      // パンチ: 右腕を前方に突き出す
-      ctx.fillRect(ox + 1, 22, 4, 14);   // 左腕（引いた状態）
-      ctx.fillRect(ox + 24, 20, 6, 5);   // 右腕（伸ばした状態）
-      // パンチ拳（肌色）
-      ctx.fillStyle = '#f7c8a0';
-      ctx.fillRect(ox + 26, 18, 4, 5);
+      // パンチ: 左腕を引いて右腕を力強く突き出す
+      ctx.fillRect(ox + 3,  26, 6, 12);   // 左腕（引き）
+      ctx.fillRect(ox + 27, 19, 7,  6);   // 右腕（突き出し）
+      // 右拳（肌色）
+      ctx.fillStyle = '#fce8d0';
+      ctx.fillRect(ox + 30, 17, 6,  7);
+      ctx.fillStyle = '#d4b090';          // 拳の指の影
+      ctx.fillRect(ox + 30, 19, 1,  5);
+      ctx.fillRect(ox + 32, 19, 1,  5);
+      ctx.fillRect(ox + 34, 19, 1,  4);
     } else {
-      // キック: バランスのため両腕を広げる
-      ctx.fillRect(ox + 0, 18, 4, 16);
-      ctx.fillRect(ox + 26, 18, 4, 16);
+      // キック: 両腕を広げてバランス
+      ctx.fillRect(ox + 1,  20, 7, 15);
+      ctx.fillRect(ox + 28, 20, 7, 15);
     }
 
-    // ---- 脚（フレーム別） ----
-    ctx.fillStyle = '#f7c8a0';  // 肌（ソックスより上）
+    // ---- 太もも（スカート下・肌色） ----
+    // キックフレームはスカートの後に描くため脚は後で描画
+    ctx.fillStyle = '#fce8d0';
     if (frame === 0) {
-      ctx.fillRect(ox + 7, 50, 6, 4);
-      ctx.fillRect(ox + 17, 50, 6, 4);
+      ctx.fillRect(ox + 11, 44, 7, 10);
+      ctx.fillRect(ox + 18, 44, 7, 10);
     } else if (frame === 1) {
-      ctx.fillRect(ox + 5, 48, 6, 6);
-      ctx.fillRect(ox + 19, 51, 6, 3);
+      ctx.fillRect(ox + 9,  42, 7, 12);  // 左前
+      ctx.fillRect(ox + 20, 45, 7,  9);  // 右後
     } else if (frame === 2) {
-      ctx.fillRect(ox + 5, 51, 6, 3);
-      ctx.fillRect(ox + 19, 48, 6, 6);
+      ctx.fillRect(ox + 9,  45, 7,  9);  // 左後
+      ctx.fillRect(ox + 20, 42, 7, 12);  // 右前
     } else if (frame === 3) {
-      // パンチ: 両足自然立ち
-      ctx.fillRect(ox + 7, 50, 6, 4);
-      ctx.fillRect(ox + 17, 50, 6, 4);
+      ctx.fillRect(ox + 11, 44, 7, 10);
+      ctx.fillRect(ox + 18, 44, 7, 10);
     } else {
-      // キック: 右足を前方上方に蹴り上げ
-      ctx.fillRect(ox + 7, 50, 6, 4);   // 左足（接地）
-      // キック足スカート下から延伸
-      ctx.fillStyle = '#1e2e5a';  // スカートの延長
-      ctx.fillRect(ox + 3, 44, 10, 8);
-      ctx.fillStyle = '#e8edf4';  // 右足ソックス（蹴り足）
-      ctx.fillRect(ox + 20, 40, 6, 4);
-      ctx.fillStyle = '#f7c8a0';
-      ctx.fillRect(ox + 20, 44, 6, 4);
+      // キック: 左軸足、右足を高く蹴り上げ
+      ctx.fillRect(ox + 11, 44, 7, 10);  // 左太もも（軸足）
+      ctx.fillRect(ox + 20, 37, 9,  7);  // 右太もも（蹴り足、スカート横）
+    }
+
+    // ---- ニーハイソックス（白） ----
+    ctx.fillStyle = '#e8f4ff';
+    if (frame === 0) {
+      ctx.fillRect(ox + 11, 54, 7, 6);
+      ctx.fillRect(ox + 18, 54, 7, 6);
+    } else if (frame === 1) {
+      ctx.fillRect(ox + 9,  54, 7, 6);
+      ctx.fillRect(ox + 20, 54, 7, 6);
+    } else if (frame === 2) {
+      ctx.fillRect(ox + 9,  54, 7, 6);
+      ctx.fillRect(ox + 20, 54, 7, 6);
+    } else if (frame === 3) {
+      ctx.fillRect(ox + 11, 54, 7, 6);
+      ctx.fillRect(ox + 18, 54, 7, 6);
+    } else {
+      ctx.fillRect(ox + 11, 54, 7, 6);   // 左足ソックス
+      ctx.fillRect(ox + 20, 42, 9, 5);   // 右足ソックス（蹴り足）
     }
 
     // ---- 靴 ----
-    ctx.fillStyle = '#181020';
+    ctx.fillStyle = '#1a0e28';
     if (frame === 0) {
-      ctx.fillRect(ox + 6, 55, 8, 3);
-      ctx.fillRect(ox + 16, 55, 8, 3);
+      ctx.fillRect(ox + 10, 60, 9, 4);
+      ctx.fillRect(ox + 17, 60, 9, 4);
     } else if (frame === 1) {
-      ctx.fillRect(ox + 4, 53, 8, 3);
-      ctx.fillRect(ox + 18, 55, 8, 3);
+      ctx.fillRect(ox + 8,  60, 9, 4);
+      ctx.fillRect(ox + 19, 60, 9, 4);
     } else if (frame === 2) {
-      ctx.fillRect(ox + 4, 55, 8, 3);
-      ctx.fillRect(ox + 18, 53, 8, 3);
+      ctx.fillRect(ox + 8,  60, 9, 4);
+      ctx.fillRect(ox + 19, 60, 9, 4);
     } else if (frame === 3) {
-      ctx.fillRect(ox + 6, 55, 8, 3);
-      ctx.fillRect(ox + 16, 55, 8, 3);
+      ctx.fillRect(ox + 10, 60, 9, 4);
+      ctx.fillRect(ox + 17, 60, 9, 4);
     } else {
-      // キック: 左足靴のみ（右足は蹴り上げ）
-      ctx.fillRect(ox + 6, 55, 8, 3);
-      ctx.fillRect(ox + 20, 43, 6, 3);  // 蹴り足の靴
+      ctx.fillRect(ox + 10, 60, 9, 4);   // 左靴
+      ctx.fillRect(ox + 20, 47, 9, 4);   // 右靴（蹴り足先）
     }
   }
 
@@ -364,8 +384,8 @@ export class CharacterTextureFactory {
     if (!anims.exists('player_idle')) {
       anims.create({ key: 'player_idle',  frames: anims.generateFrameNumbers('char_player', { start: 0, end: 0 }), frameRate: 1, repeat: -1 });
       anims.create({ key: 'player_walk',  frames: anims.generateFrameNumbers('char_player', { start: 1, end: 2 }), frameRate: 8, repeat: -1 });
-      anims.create({ key: 'player_punch', frames: anims.generateFrameNumbers('char_player', { start: 3, end: 3 }), frameRate: 10, repeat: 0 });
-      anims.create({ key: 'player_kick',  frames: anims.generateFrameNumbers('char_player', { start: 4, end: 4 }), frameRate: 10, repeat: 0 });
+      anims.create({ key: 'player_punch', frames: [{ key: 'char_player', frame: 3 }], duration: 260, repeat: 0 });
+      anims.create({ key: 'player_kick',  frames: [{ key: 'char_player', frame: 4 }], duration: 300, repeat: 0 });
     }
 
     for (const type of ['normal', 'rush'] as const) {

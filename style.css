@@ -26,8 +26,10 @@ body {
 
 canvas {
   display: block;
-  /* pixelArt モード無効化に合わせてスムーススケーリングを使用 */
-  image-rendering: auto;
+  /* antialias内部描画 + NN拡大でフルHDのにじみを防止 */
+  image-rendering: -moz-crisp-edges;
+  image-rendering: crisp-edges;
+  image-rendering: pixelated;
   /* フォーカスアウトライン非表示 */
   outline: none;
 }
