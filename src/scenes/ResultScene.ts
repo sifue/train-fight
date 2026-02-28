@@ -3,7 +3,7 @@ import { HEIGHT, WIDTH } from '../constants';
 import { SaveManager } from '../core/SaveManager';
 
 export type ResultData = {
-  result: 'win' | 'lose';
+  result: 'win' | 'lose' | 'stress';
   score: number;
   hiScore: number;
 };
@@ -35,14 +35,14 @@ export class ResultScene extends Phaser.Scene {
     this._drawButtons(result, score, hiScore);
   }
 
-  private _drawBackground(result: 'win' | 'lose'): void {
-    const color = result === 'win' ? 0x0a1e0a : 0x1e0a0a;
+  private _drawBackground(result: 'win' | 'lose' | 'stress'): void {
+    const color = result === 'win' ? 0x0a1e0a : result === 'stress' ? 0x1e100a : 0x1e0a0a;
     this.add.graphics()
       .fillStyle(color, 1)
       .fillRect(0, 0, WIDTH, HEIGHT);
 
     // 装飾ライン
-    const lineColor = result === 'win' ? 0x2a5a2a : 0x5a2a2a;
+    const lineColor = result === 'win' ? 0x2a5a2a : result === 'stress' ? 0x5a3a0a : 0x5a2a2a;
     for (let i = 0; i < 5; i++) {
       this.add.graphics()
         .lineStyle(1, lineColor, 0.4)
@@ -50,11 +50,12 @@ export class ResultScene extends Phaser.Scene {
     }
   }
 
-  private _drawResultText(result: 'win' | 'lose'): void {
+  private _drawResultText(result: 'win' | 'lose' | 'stress'): void {
     const isWin = result === 'win';
-    const mainMsg = isWin ? 'YOU WIN!' : 'GAME OVER';
-    const subMsg  = isWin ? '非常ブレーキ作動！電車を止めた！' : 'やられてしまった...';
-    const color   = isWin ? '#9dff9d' : '#ff9f9f';
+    const isStress = result === 'stress';
+    const mainMsg = isWin ? 'YOU WIN!' : isStress ? 'STRESS OVER' : 'GAME OVER';
+    const subMsg  = isWin ? '非常ブレーキ作動！電車を止めた！' : isStress ? 'ストレスで限界に達した...' : 'やられてしまった...';
+    const color   = isWin ? '#9dff9d' : isStress ? '#ffaa44' : '#ff9f9f';
 
     // 大きなメインメッセージ
     const mainText = this.add.text(WIDTH / 2, HEIGHT / 2 - 110, mainMsg, {
@@ -63,7 +64,7 @@ export class ResultScene extends Phaser.Scene {
       color,
       stroke: '#000000',
       strokeThickness: 8,
-      shadow: { offsetX: 4, offsetY: 4, color: isWin ? '#006600' : '#660000', fill: true }
+      shadow: { offsetX: 4, offsetY: 4, color: isWin ? '#006600' : isStress ? '#884400' : '#660000', fill: true }
     }).setOrigin(0.5).setAlpha(0);
 
     // テキストをアニメーション表示
@@ -161,7 +162,7 @@ export class ResultScene extends Phaser.Scene {
     });
   }
 
-  private _drawButtons(result: 'win' | 'lose', score: number, hiScore: number): void {
+  private _drawButtons(result: 'win' | 'lose' | 'stress', score: number, hiScore: number): void {
     const btnY = HEIGHT / 2 + 130;
     const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
 

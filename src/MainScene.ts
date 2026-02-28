@@ -177,10 +177,10 @@ export class MainScene extends Phaser.Scene {
       this.persistHiScore();
     }
 
-    // ストレス最大でゲームオーバー
+    // ストレス最大でゲームオーバー（ストレス過負荷）
     if (!this.ended && this.stressSystem.getStressPercent() >= 100) {
-      this.cameras.main.flash(200, 255, 60, 60);
-      this.endRun('GAME OVER');
+      this.cameras.main.flash(300, 255, 80, 80);
+      this.endRun('STRESS OVER');
     }
   }
 
@@ -532,15 +532,17 @@ export class MainScene extends Phaser.Scene {
       this.cameras.main.fadeOut(400, 0, 0, 0);
     });
     this.time.delayedCall(delay + 400, () => {
+      const resultKind = isWin ? 'win' : message === 'STRESS OVER' ? 'stress' : 'lose';
       this.scene.start('ResultScene', {
-        result: isWin ? 'win' : 'lose',
+        result: resultKind,
         score: this.scoreSystem.getScore(),
         hiScore: this.scoreSystem.getHiScore()
       });
     });
 
     // 暫定テキスト（遷移まで表示）
-    this.uiSystem.showResult(isWin ? 'YOU WIN!' : 'GAME OVER');
+    const displayMsg = isWin ? 'YOU WIN!' : message === 'STRESS OVER' ? 'STRESS OVER!' : 'GAME OVER';
+    this.uiSystem.showResult(displayMsg);
   }
 
   private stopAllEnemies(): void {
