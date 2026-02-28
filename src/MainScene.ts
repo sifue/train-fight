@@ -23,6 +23,11 @@ import {
   LIGHT_ATTACK,
   PLAYER_BODY_HEIGHT,
   PLAYER_BODY_WIDTH,
+  PLAYER_DASH_DRAIN_PER_SEC,
+  PLAYER_DASH_RECOVER_PER_SEC,
+  PLAYER_DASH_STAMINA_MAX,
+  PLAYER_DASH_TURN_SPEED,
+  PLAYER_DASH_TURN_VELOCITY_GATE,
   PLAYER_DRAG_X,
   PLAYER_HIT_TINT_RESET_MS,
   PLAYER_MAX_HP,
@@ -63,6 +68,8 @@ export class MainScene extends Phaser.Scene {
   private combatSystem?: CombatSystem;
   private enemyAiSystem = new EnemyAiSystem();
   private playerHp = PLAYER_MAX_HP;
+  private dashStamina = PLAYER_DASH_STAMINA_MAX;
+  private dashActive = false;
   private ended = false;
 
   constructor() {
@@ -73,6 +80,8 @@ export class MainScene extends Phaser.Scene {
     this.ended = false;
     this.playerHp = PLAYER_MAX_HP;
     this.facing = 1;
+    this.dashStamina = PLAYER_DASH_STAMINA_MAX;
+    this.dashActive = false;
     this.player = undefined;
     this.enemies = undefined;
     this.combatSystem = undefined;
@@ -113,7 +122,7 @@ export class MainScene extends Phaser.Scene {
     const now = this.time.now;
 
     if (!this.ended) {
-      this.updatePlayerInput();
+      this.updatePlayerInput(delta);
     }
 
     this.enemyAiSystem.update(now, this.player, this.enemies, this.ended);
@@ -206,7 +215,9 @@ export class MainScene extends Phaser.Scene {
       hp: this.playerHp,
       stressPercent: this.stressSystem.getStressPercent(),
       stressCritical: this.stressSystem.isCritical(),
-      enemiesLeft: this.enemies?.countActive(true) ?? 0
+      enemiesLeft: this.enemies?.countActive(true) ?? 0,
+      dashStamina: this.dashStamina,
+      dashActive: this.dashActive
     };
   }
 
@@ -224,15 +235,19 @@ export class MainScene extends Phaser.Scene {
     this.rKey = bindKey(Phaser.Input.Keyboard.KeyCodes.R);
   }
 
-  private updatePlayerInput(): void {
+  private updatePlayerInput(delta: number): void {
     const player = this.player;
     const cursors = this.cursors;
     if (!player || !cursors) return;
 
-    const speed = this.shiftKey?.isDown ? PLAYER_RUN_SPEED : PLAYER_WALK_SPEED;
+    const wantsDash = Boolean(this.shiftKey?.isDown) && this.dashStamina > 0;
+    this.dashActive = wantsDash;
 
-    this.updateHorizontalMovement(player, cursors, speed);
+    const speed = wantsDash ? PLAYER_RUN_SPEED : PLAYER_WALK_SPEED;
+
+    this.updateHorizontalMovement(player, cursors, speed, wantsDash);
     this.handleJumpInput(player, cursors);
+    this.updateDashStamina(delta, wantsDash);
 
     this.handleAttackInput(this.zKey, 'light', LIGHT_ATTACK);
     this.handleAttackInput(this.xKey, 'heavy', HEAVY_ATTACK);
@@ -241,18 +256,41 @@ export class MainScene extends Phaser.Scene {
   private updateHorizontalMovement(
     player: Player,
     cursors: Phaser.Types.Input.Keyboard.CursorKeys,
-    speed: number
+    speed: number,
+    dashActive: boolean
   ): void {
     if (cursors.left.isDown) {
+      if (dashActive && this.facing === 1 && Math.abs(player.body.velocity.x) > PLAYER_DASH_TURN_VELOCITY_GATE) {
+        player.body.setVelocityX(-PLAYER_DASH_TURN_SPEED);
+        return;
+      }
       player.body.setVelocityX(-speed);
       this.facing = -1;
       return;
     }
 
     if (cursors.right.isDown) {
+      if (dashActive && this.facing === -1 && Math.abs(player.body.velocity.x) > PLAYER_DASH_TURN_VELOCITY_GATE) {
+        player.body.setVelocityX(PLAYER_DASH_TURN_SPEED);
+        return;
+      }
       player.body.setVelocityX(speed);
       this.facing = 1;
     }
+  }
+
+  private updateDashStamina(delta: number, dashActive: boolean): void {
+    const sec = delta / 1000;
+    if (dashActive) {
+      this.dashStamina = Math.max(0, this.dashStamina - PLAYER_DASH_DRAIN_PER_SEC * sec);
+      if (this.dashStamina <= 0) this.dashActive = false;
+      return;
+    }
+
+    this.dashStamina = Math.min(
+      PLAYER_DASH_STAMINA_MAX,
+      this.dashStamina + PLAYER_DASH_RECOVER_PER_SEC * sec
+    );
   }
 
   private handleJumpInput(player: Player, cursors: Phaser.Types.Input.Keyboard.CursorKeys): void {
@@ -302,6 +340,7 @@ export class MainScene extends Phaser.Scene {
     if (!this.player || this.ended) return;
 
     this.ended = true;
+    this.dashActive = false;
     this.combatSystem?.disable();
     this.player.body.setVelocity(0, this.player.body.velocity.y);
     this.stopAllEnemies();
