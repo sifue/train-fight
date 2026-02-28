@@ -282,7 +282,8 @@ export class MainScene extends Phaser.Scene {
       enemiesLeft: this.enemies?.countActive(true) ?? 0,
       distToGoal,
       bgmVolume: this.audioManager.getBGMVolume(),
-      seVolume: this.audioManager.getSEVolume()
+      seVolume: this.audioManager.getSEVolume(),
+      playerX: this.player?.x ?? 0
     };
   }
 

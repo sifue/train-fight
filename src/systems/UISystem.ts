@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { HEIGHT, WIDTH } from '../constants';
+import { HEIGHT, WIDTH, WORLD_WIDTH } from '../constants';
 
 type UiStyleColor = '#ffd166' | '#7ce0ff' | '#9dff9d' | '#ff9f9f' | '#ffcf8a' | '#d7e3ff' | '#ffd6a5' | '#fff2b2';
 
@@ -17,6 +17,8 @@ export type UiSnapshot = {
   bgmVolume: number;
   /** SE音量 0.0〜1.0 */
   seVolume: number;
+  /** プレイヤーX座標（進行度計算用） */
+  playerX: number;
 };
 
 export class UISystem {
@@ -31,6 +33,9 @@ export class UISystem {
   private soundText?: Phaser.GameObjects.Text;
   private missionText?: Phaser.GameObjects.Text;
   private resultText?: Phaser.GameObjects.Text;
+  private progressBar?: Phaser.GameObjects.Graphics;
+  /** プレイヤーX座標 (UISystem.update から毎フレーム更新) */
+  private playerX = 0;
 
   constructor(scene: Phaser.Scene, isTouchDevice = false) {
     this.scene = scene;
@@ -38,6 +43,7 @@ export class UISystem {
   }
 
   create(): void {
+    this.drawProgressBar();
     this.drawHudPanel();
     this.drawMissionCard();
     this.comboText = this.scene.add.text(24, 20, '', this.uiStyle('#ffd166')).setScrollFactor(0);
@@ -83,6 +89,7 @@ export class UISystem {
     const bgmPct = Math.round(snapshot.bgmVolume * 100);
     const sePct  = Math.round(snapshot.seVolume  * 100);
     this.soundText?.setText(`BGM: ${bgmPct}%  SE: ${sePct}%`);
+    this.updateProgressBar(snapshot.playerX);
     const distLabel = snapshot.distToGoal <= 0 ? 'GOAL!' : `先頭まで: ${snapshot.distToGoal}m`;
     this.missionText?.setText(
       `- ${distLabel}\n- [${snapshot.hp > 0 ? '✓' : ' '}] HPを残して生還`
@@ -101,6 +108,51 @@ export class UISystem {
       stroke: '#000000',
       strokeThickness: 3
     };
+  }
+
+  private drawProgressBar(): void {
+    // 進行度バー（画面下部）
+    const barH = 6;
+    const barY = HEIGHT - barH;
+
+    // 背景レール
+    const rail = this.scene.add.graphics().setScrollFactor(0).setDepth(40);
+    rail.fillStyle(0x1a2a3a, 0.85);
+    rail.fillRect(0, barY, WIDTH, barH);
+
+    // 動的な進行バー
+    this.progressBar = this.scene.add.graphics().setScrollFactor(0).setDepth(41);
+
+    // ゴールマーカー
+    const goalPct = (WORLD_WIDTH - 220) / WORLD_WIDTH;
+    const goalX = Math.floor(goalPct * WIDTH);
+    rail.fillStyle(0xffd166, 0.9);
+    rail.fillRect(goalX - 2, barY - 2, 4, barH + 2);
+    this.scene.add.text(goalX, barY - 14, '🚨', { fontSize: '11px' })
+      .setScrollFactor(0).setDepth(42).setOrigin(0.5);
+  }
+
+  private updateProgressBar(playerX: number): void {
+    if (!this.progressBar) return;
+    this.progressBar.clear();
+
+    const barH = 6;
+    const barY = HEIGHT - barH;
+    const pct = Math.min(1, playerX / WORLD_WIDTH);
+    const barW = Math.floor(pct * WIDTH);
+
+    // 進行度に応じて色変化（青→緑）
+    const r = Math.floor(Phaser.Math.Interpolation.Linear([0x4a, 0x2a], pct));
+    const g = Math.floor(Phaser.Math.Interpolation.Linear([0x8a, 0xdd], pct));
+    const b = Math.floor(Phaser.Math.Interpolation.Linear([0xff, 0x44], pct));
+    const color = (r << 16) | (g << 8) | b;
+
+    this.progressBar.fillStyle(color, 0.95);
+    this.progressBar.fillRect(0, barY, barW, barH);
+
+    // プレイヤー位置マーカー
+    this.progressBar.fillStyle(0xffffff, 1);
+    this.progressBar.fillRect(barW - 2, barY - 1, 4, barH + 2);
   }
 
   private drawHudPanel(): void {
