@@ -108,6 +108,7 @@ export class MainScene extends Phaser.Scene {
     this.resetRunState();
     this.physics.world.setBounds(0, 0, WORLD_WIDTH, HEIGHT);
     this.scoreSystem = new ScoreSystem(SaveManager.getHiScore());
+    this.stressSystem = new StressSystem();
 
     // キャラクターテクスチャを先に生成
     new CharacterTextureFactory(this).createAll();
